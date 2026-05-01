@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "気分・睡眠ログ",
+    "slug": "mood-and-sleep-log",
+    "scheme": "moodsleep",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.wednesdaydeveloper.moodandsleeplog",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "アプリのデータ保護のため、生体認証を使用します（将来機能）。"
+      }
+    },
+    "android": {
+      "package": "com.wednesdaydeveloper.moodandsleeplog",
+      "allowBackup": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
