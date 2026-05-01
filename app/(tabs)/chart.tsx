@@ -11,6 +11,7 @@ import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-rec
 import {
   aggregateForMonth,
   aggregateForWeek,
+  aggregateForYear,
   type ChartPeriod,
   type ChartPoint,
 } from '@/domain/chart-aggregation';
@@ -45,11 +46,11 @@ export default function ChartScreen() {
       ? aggregateForWeek(records, todayIso())
       : period === 'month'
         ? aggregateForMonth(records, todayIso())
-        : [];
+        : aggregateForYear(records, todayIso());
 
   return (
     <View style={styles.container}>
-      <PeriodTabs value={period} onChange={setPeriod} disabledPeriods={['year']} />
+      <PeriodTabs value={period} onChange={setPeriod} />
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator />
