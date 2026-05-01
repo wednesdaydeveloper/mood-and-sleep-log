@@ -20,11 +20,40 @@ describe('TAG_PRESETS', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('matches the requirements (negative: 10, positive: 9, state: 7, thought: 4)', () => {
-    expect(getTagsByCategory('negative')).toHaveLength(10);
-    expect(getTagsByCategory('positive')).toHaveLength(9);
-    expect(getTagsByCategory('state')).toHaveLength(7);
+  it('matches the v1.1 preset count (negative: 12, positive: 10, state: 15, thought: 4)', () => {
+    expect(getTagsByCategory('negative')).toHaveLength(12);
+    expect(getTagsByCategory('positive')).toHaveLength(10);
+    expect(getTagsByCategory('state')).toHaveLength(15);
     expect(getTagsByCategory('thought')).toHaveLength(4);
+  });
+
+  it('total tag count is 41', () => {
+    expect(TAG_PRESETS).toHaveLength(41);
+  });
+
+  it('contains the v1.1 newly added tags', () => {
+    const names = TAG_PRESETS.map((t) => t.name);
+    for (const tag of [
+      '退屈',
+      '物足りない',
+      '楽',
+      '憂鬱',
+      '集中できない',
+      '軽躁',
+      '軽鬱',
+      '躁',
+      'フラット',
+      'アイデアが駆け巡る',
+      '過活動',
+    ]) {
+      expect(names).toContain(tag);
+    }
+  });
+
+  it('does not duplicate the existing 不安 tag', () => {
+    const names = TAG_PRESETS.map((t) => t.name);
+    const count = names.filter((n) => n === '不安').length;
+    expect(count).toBe(1);
   });
 });
 

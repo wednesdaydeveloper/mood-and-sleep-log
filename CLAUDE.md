@@ -13,7 +13,7 @@
 
 ## 設計書のトリアージ
 
-設計書は15本ある。タスクに応じて読む対象:
+設計書は16本ある。タスクに応じて読む対象:
 
 | やりたいこと | 主に見る設計書 |
 |------------|---------------|
@@ -28,6 +28,8 @@
 | E2E テスト | [10-e2e-scenarios.md](docs/design/10-e2e-scenarios.md) |
 | データ保護・プライバシー | [11-security-privacy.md](docs/design/11-security-privacy.md) |
 | ローカライズ | [12-i18n.md](docs/design/12-i18n.md) |
+| ロードマップ・将来機能 | [13-future-roadmap.md](docs/design/13-future-roadmap.md) |
+| **v1.1 機能（タグ追加 / 軸表示 / 検索 / CSVインポート）** | [16-v1.1-features.md](docs/design/16-v1.1-features.md) |
 
 ## 確定済みの主要技術判断
 
@@ -84,10 +86,11 @@
 詳細: [docs/design/07-cicd-release.md §1](docs/design/07-cicd-release.md), [docs/design/15-github-management.md](docs/design/15-github-management.md)
 
 - **GitHub Flow 軽量版**。`main` 一本 + 短命フィーチャーブランチ
-- 命名: `feat/m{N}-{slug}` / `fix/{slug}` / `docs/{slug}` / `chore/{slug}`
+- 命名: `feat/m{N}-{slug}` / `feat/v{X.Y}-{slug}` / `fix/{slug}` / `docs/{slug}` / `chore/{slug}`
 - 1 PR の目安: **半日〜2日 / 200〜500行**
 - マージは **Squash and Merge**
 - マージ後は **必ず main に同期し直してから次ブランチを切る**
+- **マージ済みブランチはローカル/リモート両方削除**（v1.0 リリース時に古い `feat/m5-line-charts` の再マージで主要修正が巻き戻る事故あり）
 
 ## よく使うコマンド
 

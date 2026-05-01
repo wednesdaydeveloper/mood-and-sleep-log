@@ -1,5 +1,5 @@
 // 感情タグの固定プリセット（要件 §FR-1.2）
-// 4 カテゴリ、合計 30 タグ。ユーザー追加は不可（v1 スコープ）。
+// 4 カテゴリ、合計 41 タグ。ユーザー追加は不可（v1 スコープ）。
 
 export type TagCategory = 'negative' | 'positive' | 'state' | 'thought';
 
@@ -26,6 +26,8 @@ const NEGATIVE: readonly string[] = [
   '焦り',
   '恥ずかしい',
   '空虚',
+  '退屈',
+  '物足りない',
 ];
 
 const POSITIVE: readonly string[] = [
@@ -38,6 +40,7 @@ const POSITIVE: readonly string[] = [
   '充実',
   '希望',
   '自信',
+  '楽',
 ];
 
 const STATE: readonly string[] = [
@@ -48,6 +51,14 @@ const STATE: readonly string[] = [
   '疲れ',
   '感情のコントロール不能',
   '涙もろい',
+  '憂鬱',
+  '集中できない',
+  '軽躁',
+  '軽鬱',
+  '躁',
+  'フラット',
+  'アイデアが駆け巡る',
+  '過活動',
 ];
 
 const THOUGHT: readonly string[] = [
