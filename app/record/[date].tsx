@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -9,7 +19,7 @@ import { TagSelector } from '@/components/tags/TagSelector';
 import { findByDate, upsert } from '@/db/repositories/daily-record';
 import { DEFAULT_FORM_VALUES, type RecordFormValues, recordFormSchema } from '@/domain/record-form';
 import { type SleepInterval } from '@/domain/sleep';
-import { toTimelineInterval } from '@/domain/sleep-mapping';
+import { toDbInterval, toTimelineInterval } from '@/domain/sleep-mapping';
 import { fromIsoDate } from '@/lib/date';
 
 export default function RecordScreen() {
@@ -61,7 +71,7 @@ export default function RecordScreen() {
         moodScore: parsed.data.moodScore,
         moodTags: parsed.data.moodTags,
         memo: parsed.data.memo,
-        intervals: [], // M3 で実装
+        intervals: intervals.map((iv) => toDbInterval(isoDate, iv)),
       });
       router.back();
     } catch (e: unknown) {
@@ -98,7 +108,11 @@ export default function RecordScreen() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Section title="😊 気分">
           <Controller
             control={control}
@@ -109,7 +123,7 @@ export default function RecordScreen() {
           />
         </Section>
 
-        <SleepTimeline intervals={intervals} />
+        <SleepTimeline intervals={intervals} onChange={setIntervals} />
 
         <Section title="🏷 感情タグ">
           <Controller
@@ -139,7 +153,8 @@ export default function RecordScreen() {
           />
           {errors.memo && <Text style={styles.errorText}>{errors.memo.message}</Text>}
         </Section>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
@@ -161,6 +176,7 @@ function formatTitle(iso: string): string {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 24, paddingBottom: 48 },
   section: { gap: 8 },
