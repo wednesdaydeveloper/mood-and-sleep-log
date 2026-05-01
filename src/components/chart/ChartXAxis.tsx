@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { type ChartPeriod, type ChartPoint } from '@/domain/chart-aggregation';
+import { useTheme } from '@/theme/useTheme';
 
 interface ChartXAxisProps {
   points: readonly ChartPoint[];
@@ -12,13 +13,14 @@ interface ChartXAxisProps {
  * 各段（折れ線・縦帯）と確実に同じ刻みでラベルを表示する。
  *
  * - week: すべての日付
- * - month: 7 日ごと（週単位）
+ * - month: 末尾起算で 7 日ごと（"今日" を必ず含む）
  * - year: 月ごと（M6 で対応）
  *
  * セル幅が狭い場合でもラベルが折り返されないよう、
  * 各ラベルを絶対配置で中央揃えにし numberOfLines={1} で 1 行に固定する。
  */
 export function ChartXAxis({ points, period }: ChartXAxisProps) {
+  const { colors } = useTheme();
   const labelIndices = computeLabelPositions(points.length, period);
   const count = points.length;
 
@@ -27,12 +29,11 @@ export function ChartXAxis({ points, period }: ChartXAxisProps) {
       {Array.from(labelIndices).map((index) => {
         const p = points[index];
         if (!p) return null;
-        // 列の中心位置を 0..1 で表現（domainPadding を考慮しない簡易版）
         const ratio = count > 1 ? index / (count - 1) : 0.5;
         return (
           <Text
             key={p.dateIso}
-            style={[styles.label, { left: `${ratio * 100}%` }]}
+            style={[styles.label, { color: colors.textSecondary, left: `${ratio * 100}%` }]}
             numberOfLines={1}
           >
             {p.label}
@@ -51,14 +52,12 @@ function computeLabelPositions(count: number, period: ChartPeriod): Set<number> 
     return set;
   }
   if (period === 'month') {
-    // 末尾（今日）から逆算して 7 日ごと。
-    // 例: 30日表示なら 5/1, 4/24, 4/17, 4/10, 4/3 にラベル
+    // 末尾（今日）から逆算して 7 日ごと
     for (let i = count - 1; i >= 0; i -= 7) set.add(i);
     return set;
   }
-  // year は M6 で実装。当面は両端のみ
-  set.add(0);
-  set.add(count - 1);
+  // year: 12 ヶ月分、すべての月にラベル
+  for (let i = 0; i < count; i++) set.add(i);
   return set;
 }
 
@@ -72,9 +71,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     fontSize: 10,
-    color: '#666',
     width: 40,
-    marginLeft: -20, // 中央揃え
+    marginLeft: -20,
     textAlign: 'center',
   },
 });

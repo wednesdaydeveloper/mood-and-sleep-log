@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { TIMELINE_TOTAL_MINUTES, formatTimelineMinute, minToPx } from '@/domain/sleep';
+import { useTheme } from '@/theme/useTheme';
 
 interface TimelineRulerProps {
   /** 描画領域の幅 (px)。 */
@@ -16,6 +17,7 @@ const TICKS = Array.from(
 );
 
 export function TimelineRuler({ usableWidth }: TimelineRulerProps) {
+  const { colors } = useTheme();
   return (
     <View style={[styles.container, { width: usableWidth }]} pointerEvents="none">
       {TICKS.map((min) => {
@@ -23,8 +25,8 @@ export function TimelineRuler({ usableWidth }: TimelineRulerProps) {
         const label = formatTimelineMinute(min).slice(0, 2); // "21:00" → "21"
         return (
           <View key={min} style={[styles.tick, { left }]}>
-            <Text style={styles.tickLabel}>{label}</Text>
-            <View style={styles.tickLine} />
+            <Text style={[styles.tickLabel, { color: colors.textSecondary }]}>{label}</Text>
+            <View style={[styles.tickLine, { backgroundColor: colors.border }]} />
           </View>
         );
       })}
@@ -46,12 +48,10 @@ const styles = StyleSheet.create({
   },
   tickLabel: {
     fontSize: 11,
-    color: '#888',
     marginBottom: 2,
   },
   tickLine: {
     width: 1,
     height: 6,
-    backgroundColor: '#CCC',
   },
 });

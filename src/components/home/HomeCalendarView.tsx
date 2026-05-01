@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 import { MOOD_EMOJI } from '@/domain/mood';
 import { todayIso } from '@/lib/date';
+import { useTheme } from '@/theme/useTheme';
 
 LocaleConfig.locales.ja = {
   monthNames: [
@@ -27,6 +28,7 @@ interface HomeCalendarViewProps {
 }
 
 export function HomeCalendarView({ records }: HomeCalendarViewProps) {
+  const { colors, scheme } = useTheme();
   const recordMap = useMemo(() => {
     const map = new Map<string, DailyRecordWithIntervals>();
     for (const r of records) map.set(r.date, r);
@@ -38,8 +40,9 @@ export function HomeCalendarView({ records }: HomeCalendarViewProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgSecondary }]}>
       <Calendar
+        key={scheme}
         current={todayIso()}
         maxDate={todayIso()}
         onDayPress={handleDayPress}
@@ -59,6 +62,11 @@ export function HomeCalendarView({ records }: HomeCalendarViewProps) {
           );
         }}
         theme={{
+          calendarBackground: colors.bgSecondary,
+          monthTextColor: colors.textPrimary,
+          dayTextColor: colors.textPrimary,
+          textSectionTitleColor: colors.textSecondary,
+          arrowColor: colors.accent,
           textDayFontSize: 12,
           textMonthFontSize: 16,
           textMonthFontWeight: '600',
@@ -77,16 +85,26 @@ interface CellProps {
 }
 
 function Cell({ dayNum, record, disabled, onPress }: CellProps) {
+  const { colors } = useTheme();
   return (
     <View
       style={[styles.cell, disabled && styles.cellDisabled]}
       onTouchEnd={disabled ? undefined : onPress}
     >
-      <Text style={[styles.dayNum, disabled && styles.dayNumDisabled]}>{dayNum}</Text>
+      <Text
+        style={[
+          styles.dayNum,
+          { color: disabled ? colors.textDisabled : colors.textPrimary },
+        ]}
+      >
+        {dayNum}
+      </Text>
       {record ? (
         <>
           <Text style={styles.emoji}>{MOOD_EMOJI[record.moodScore]}</Text>
-          <Text style={styles.duration}>{formatHours(totalMinutes(record))}</Text>
+          <Text style={[styles.duration, { color: colors.textSecondary }]}>
+            {formatHours(totalMinutes(record))}
+          </Text>
         </>
       ) : (
         <View style={styles.placeholder} />
@@ -112,7 +130,7 @@ function formatHours(minutes: number): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1 },
   cell: {
     width: 44,
     minHeight: 56,
@@ -120,9 +138,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   cellDisabled: { opacity: 0.35 },
-  dayNum: { fontSize: 12, color: '#333' },
-  dayNumDisabled: { color: '#999' },
+  dayNum: { fontSize: 12 },
   emoji: { fontSize: 18, marginTop: 2 },
-  duration: { fontSize: 9, color: '#666' },
+  duration: { fontSize: 9 },
   placeholder: { height: 28 },
 });

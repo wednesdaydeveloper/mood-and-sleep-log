@@ -53,6 +53,106 @@ export function aggregateForMonth(
   return mapByDate(records, days).map(toRawDayPoint);
 }
 
+/**
+ * 直近 12 ヶ月分の点を月平均で返す（要件 §FR-3.1, §FR-3.2 / 設計 §3.2 §11）。
+ *
+ * - 末尾は `endIso` を含む月、そこから 11 ヶ月遡る
+ * - 各月の mood / sleepMinutes は単純平均
+ * - 睡眠時間帯は 21:00 起点の分単位で平均（startMin / endMin の平均）し
+ *   1 つの代表区間として描画
+ * - 記録 0 件の月は mood/sleepMinutes が null で intervals は空配列
+ *   （折れ線は線にギャップ、縦帯は何も描画されない）
+ */
+export function aggregateForYear(
+  records: readonly DailyRecordWithIntervals[],
+  endIso: string,
+): ChartPoint[] {
+  const months = enumerateMonths(endIso, 12);
+  // 月キー (yyyy-MM) で記録をグルーピング
+  const groups = new Map<string, DailyRecordWithIntervals[]>();
+  for (const r of records) {
+    const key = r.date.slice(0, 7);
+    const list = groups.get(key);
+    if (list) list.push(r);
+    else groups.set(key, [r]);
+  }
+  return months.map((monthIso) => buildYearPoint(monthIso, groups.get(monthIso) ?? []));
+}
+
+/** 末尾月を含めて `count` ヶ月分の `yyyy-MM` を昇順で返す。 */
+function enumerateMonths(endIso: string, count: number): string[] {
+  const endDate = fromIsoDate(endIso);
+  const result: string[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(endDate.getFullYear(), endDate.getMonth() - i, 1);
+    result.push(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
+  }
+  return result;
+}
+
+function pad2(n: number): string {
+  return n.toString().padStart(2, '0');
+}
+
+function buildYearPoint(monthIso: string, group: readonly DailyRecordWithIntervals[]): ChartPoint {
+  const label = formatMonthLabel(monthIso);
+  if (group.length === 0) {
+    return { dateIso: monthIso, label, mood: null, sleepMinutes: null, intervals: [] };
+  }
+
+  const moodSum = group.reduce((s, r) => s + r.moodScore, 0);
+  const meanMood = moodSum / group.length;
+
+  // 各日の sleepMinutes / 区間を 21:00 起点の分単位に揃え、月平均を取る
+  const dailyTotals: number[] = [];
+  const dailyStartMins: number[] = [];
+  const dailyEndMins: number[] = [];
+  for (const r of group) {
+    const intervals = r.intervals.map((iv) => toTimelineInterval(r.date, iv));
+    const total = intervals.reduce((s, i) => s + (i.endMin - i.startMin), 0);
+    if (total > 0) {
+      dailyTotals.push(total);
+      // その日の最早開始と最遅終了を代表値に
+      const earliestStart = Math.min(...intervals.map((i) => i.startMin));
+      const latestEnd = Math.max(...intervals.map((i) => i.endMin));
+      dailyStartMins.push(earliestStart);
+      dailyEndMins.push(latestEnd);
+    }
+  }
+
+  const sleepMinutes = dailyTotals.length > 0 ? mean(dailyTotals) : null;
+  const intervals: ChartIntervalRange[] =
+    dailyStartMins.length > 0 && dailyEndMins.length > 0
+      ? [
+          {
+            startMin: Math.round(mean(dailyStartMins)),
+            endMin: Math.round(mean(dailyEndMins)),
+          },
+        ]
+      : [];
+
+  return {
+    dateIso: monthIso,
+    label,
+    mood: round2(meanMood),
+    sleepMinutes,
+    intervals,
+  };
+}
+
+function mean(arr: readonly number[]): number {
+  return arr.reduce((s, n) => s + n, 0) / arr.length;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function formatMonthLabel(monthIso: string): string {
+  const [, mm] = monthIso.split('-');
+  return `${parseInt(mm ?? '0', 10)}月`;
+}
+
 /** 期間の終端から `count` 日分を昇順で返す。 */
 function enumerateDays(endIso: string, count: number): string[] {
   const endDate = fromIsoDate(endIso);

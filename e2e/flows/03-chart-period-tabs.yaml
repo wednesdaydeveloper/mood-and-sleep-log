@@ -1,0 +1,30 @@
+appId: com.wednesdaydeveloper.moodandsleeplog
+name: グラフ画面の期間タブ切替
+tags:
+  - chart
+  - smoke
+---
+- launchApp
+
+# グラフタブを開く
+- tapOn:
+    text: 'グラフ'
+
+# week が既定で active
+- assertVisible: '気分'
+- assertVisible: '睡眠時間'
+- assertVisible: '睡眠時間帯'
+
+# month に切替
+- tapOn:
+    accessibilityLabel: 'month 期間'
+- assertVisible: '気分'
+
+# year に切替
+- tapOn:
+    accessibilityLabel: 'year 期間'
+- assertVisible: '気分'
+
+# 前期間ボタン押下
+- tapOn:
+    accessibilityLabel: '前の期間'
