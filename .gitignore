@@ -141,3 +141,26 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Expo
+.expo/
+expo-env.d.ts
+*.ipa
+*.apk
+*.aab
+
+# Personal data (誤コミット防止)
+*.db
+*.sqlite
+*.sqlite-journal
+e2e-debug/
+
+# EAS / Secrets
+eas-secrets.json
+google-services.json
+GoogleService-Info.plist
+
+# OS
+.DS_Store
+Thumbs.db
+

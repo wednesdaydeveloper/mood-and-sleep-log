@@ -4,7 +4,10 @@
 
 ## ステータス
 
-設計フェーズ完了、実装着手前。
+M1 (雛形+DB) 着手中。
+- M1.1 ✅ プロジェクト雛形 + ボトムタブ3画面
+- M1.2 ⏳ DB スキーマ + SQLCipher
+- M1.3 ⏳ テスト基盤 + CI
 
 ## ドキュメント
 
@@ -34,9 +37,17 @@ Expo (managed) + TypeScript + expo-router + Jotai + Drizzle ORM + expo-sqlite + 
 ## セットアップ
 
 ```bash
+# 依存パッケージのインストール
 npm install
+
+# Expo の推奨バージョンに整列（初回のみ）
+npx expo install --fix
+
+# 起動
 npx expo start
 ```
+
+Expo Go アプリ（iOS/Android）または iOS Simulator / Android Emulator で動作確認。
 
 詳細は [01-architecture.md](docs/design/01-architecture.md) を参照。
 
