@@ -54,9 +54,8 @@ function computeLabelPositions(count: number, period: ChartPeriod): Set<number> 
     for (let i = count - 1; i >= 0; i -= 7) set.add(i);
     return set;
   }
-  // year は M6 で実装。当面は両端のみ
-  set.add(0);
-  set.add(count - 1);
+  // year: 12 ヶ月分、すべての月にラベル
+  for (let i = 0; i < count; i++) set.add(i);
   return set;
 }
 
