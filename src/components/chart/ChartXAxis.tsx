@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { type ChartPeriod, type ChartPoint } from '@/domain/chart-aggregation';
+import { useTheme } from '@/theme/useTheme';
 
 interface ChartXAxisProps {
   points: readonly ChartPoint[];
@@ -19,6 +20,7 @@ interface ChartXAxisProps {
  * 各ラベルを絶対配置で中央揃えにし numberOfLines={1} で 1 行に固定する。
  */
 export function ChartXAxis({ points, period }: ChartXAxisProps) {
+  const { colors } = useTheme();
   const labelIndices = computeLabelPositions(points.length, period);
   const count = points.length;
 
@@ -31,7 +33,7 @@ export function ChartXAxis({ points, period }: ChartXAxisProps) {
         return (
           <Text
             key={p.dateIso}
-            style={[styles.label, { left: `${ratio * 100}%` }]}
+            style={[styles.label, { color: colors.textSecondary, left: `${ratio * 100}%` }]}
             numberOfLines={1}
           >
             {p.label}
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     fontSize: 10,
-    color: '#666',
     width: 40,
     marginLeft: -20,
     textAlign: 'center',

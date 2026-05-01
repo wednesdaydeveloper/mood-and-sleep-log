@@ -18,6 +18,7 @@ import {
   type SleepInterval,
 } from '@/domain/sleep';
 import { newId } from '@/lib/id';
+import { useTheme } from '@/theme/useTheme';
 
 import { SleepIntervalBar } from './SleepIntervalBar';
 import { TimelineRuler } from './TimelineRuler';
@@ -32,6 +33,7 @@ interface SleepTimelineProps {
  * タップで区間追加、ドラッグで開始/終了時刻を変更、長押しで削除。
  */
 export function SleepTimeline({ intervals, onChange }: SleepTimelineProps) {
+  const { colors } = useTheme();
   const [usableWidth, setUsableWidth] = useState(0);
 
   const onLayout = (e: LayoutChangeEvent) => {
@@ -64,8 +66,10 @@ export function SleepTimeline({ intervals, onChange }: SleepTimelineProps) {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>睡眠時間帯</Text>
-        <Text style={styles.total}>{formatDuration(totalSleepMinutes(intervals))}</Text>
+        <Text style={[styles.label, { color: colors.textPrimary }]}>睡眠時間帯</Text>
+        <Text style={[styles.total, { color: colors.textSecondary }]}>
+          {formatDuration(totalSleepMinutes(intervals))}
+        </Text>
       </View>
 
       <View style={styles.timelineArea} onLayout={onLayout}>
@@ -74,7 +78,7 @@ export function SleepTimeline({ intervals, onChange }: SleepTimelineProps) {
           onPress={handleCanvasPress}
           accessibilityLabel="タップして睡眠区間を追加"
           accessibilityRole="button"
-          style={styles.canvasFrame}
+          style={[styles.canvasFrame, { backgroundColor: colors.bgSubtle }]}
         >
           {usableWidth > 0 &&
             intervals.map((iv) => (
@@ -90,7 +94,7 @@ export function SleepTimeline({ intervals, onChange }: SleepTimelineProps) {
         </Pressable>
       </View>
 
-      <Text style={styles.hint}>
+      <Text style={[styles.hint, { color: colors.textDisabled }]}>
         タップで区間追加、ハンドルで時刻調整、長押しで削除。
       </Text>
     </View>
@@ -116,11 +120,9 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
   },
   total: {
     fontSize: 13,
-    color: '#666',
   },
   timelineArea: {
     paddingTop: 4,
@@ -128,11 +130,9 @@ const styles = StyleSheet.create({
   canvasFrame: {
     height: 56,
     position: 'relative',
-    backgroundColor: '#D6DAE0',
     borderRadius: 8,
   },
   hint: {
     fontSize: 11,
-    color: '#999',
   },
 });

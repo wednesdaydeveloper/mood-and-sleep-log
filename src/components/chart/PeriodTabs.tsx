@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type ChartPeriod } from '@/domain/chart-aggregation';
+import { useTheme } from '@/theme/useTheme';
 
 interface PeriodTabsProps {
   value: ChartPeriod;
@@ -16,8 +17,14 @@ const ALL_PERIODS: { period: ChartPeriod; label: string }[] = [
 ];
 
 export function PeriodTabs({ value, onChange, disabledPeriods = [] }: PeriodTabsProps) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.row}>
+    <View
+      style={[
+        styles.row,
+        { backgroundColor: colors.bgSecondary, borderBottomColor: colors.border },
+      ]}
+    >
       {ALL_PERIODS.map(({ period, label }) => {
         const active = value === period;
         const disabled = disabledPeriods.includes(period);
@@ -26,14 +33,25 @@ export function PeriodTabs({ value, onChange, disabledPeriods = [] }: PeriodTabs
             key={period}
             onPress={() => !disabled && onChange(period)}
             accessibilityRole="tab"
+            accessibilityLabel={`${label} 期間`}
             accessibilityState={{ selected: active, disabled }}
-            style={[styles.tab, active && styles.tabActive, disabled && styles.tabDisabled]}
+            style={[
+              styles.tab,
+              active && { borderBottomColor: colors.tabBarActive },
+              disabled && styles.tabDisabled,
+            ]}
           >
             <Text
               style={[
                 styles.tabText,
+                {
+                  color: disabled
+                    ? colors.textDisabled
+                    : active
+                      ? colors.tabBarActive
+                      : colors.textSecondary,
+                },
                 active && styles.tabTextActive,
-                disabled && styles.tabTextDisabled,
               ]}
             >
               {label}
@@ -48,9 +66,7 @@ export function PeriodTabs({ value, onChange, disabledPeriods = [] }: PeriodTabs
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E0E0E0',
   },
   tab: {
     flex: 1,
@@ -59,9 +75,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: '#5B7FFF' },
   tabDisabled: { opacity: 0.4 },
-  tabText: { fontSize: 14, color: '#666' },
-  tabTextActive: { color: '#5B7FFF', fontWeight: '600' },
-  tabTextDisabled: { color: '#AAA' },
+  tabText: { fontSize: 14 },
+  tabTextActive: { fontWeight: '600' },
 });

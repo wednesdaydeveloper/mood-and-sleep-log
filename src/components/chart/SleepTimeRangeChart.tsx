@@ -4,15 +4,12 @@ import { Canvas, Line, Rect, vec } from '@shopify/react-native-skia';
 
 import { type ChartPoint } from '@/domain/chart-aggregation';
 import { TIMELINE_TOTAL_MINUTES, formatTimelineMinute } from '@/domain/sleep';
+import { useTheme } from '@/theme/useTheme';
 
 interface SleepTimeRangeChartProps {
   points: readonly ChartPoint[];
   height: number;
 }
-
-const COLOR = '#E53935';
-const GRID_COLOR = '#E0E0E0';
-const LABEL_COLOR = '#888';
 
 /** Y 軸目盛り（21:00 起点の分）。2 時間ごと: 21,23,01,03,05,07,09,11 */
 const Y_TICKS = [0, 120, 240, 360, 480, 600, 720, 840];
@@ -31,6 +28,7 @@ const Y_LABEL_WIDTH = 28;
  * 分割睡眠は同じ列に複数の帯が縦方向に分かれて表示される。
  */
 export function SleepTimeRangeChart({ points, height }: SleepTimeRangeChartProps) {
+  const { colors } = useTheme();
   const [containerWidth, setContainerWidth] = useState(0);
 
   const onLayout = (e: LayoutChangeEvent) => {
@@ -49,7 +47,10 @@ export function SleepTimeRangeChart({ points, height }: SleepTimeRangeChartProps
     PLOT_PADDING_TOP + (min / TIMELINE_TOTAL_MINUTES) * plotHeight;
 
   return (
-    <View onLayout={onLayout} style={[styles.container, { height }]}>
+    <View
+      onLayout={onLayout}
+      style={[styles.container, { height, backgroundColor: colors.bgSecondary }]}
+    >
       {/* Y 軸ラベル */}
       <View style={[styles.yLabelColumn, { height }]}>
         {Y_TICKS.map((tick) => (
@@ -57,7 +58,7 @@ export function SleepTimeRangeChart({ points, height }: SleepTimeRangeChartProps
             key={tick}
             style={[
               styles.yLabel,
-              { top: minToY(tick) - 6 }, // フォント縦中央調整
+              { top: minToY(tick) - 6, color: colors.textSecondary },
             ]}
           >
             {formatTimelineMinute(tick).slice(0, 2)}
@@ -77,7 +78,7 @@ export function SleepTimeRangeChart({ points, height }: SleepTimeRangeChartProps
                   key={`grid-${tick}`}
                   p1={vec(PLOT_PADDING_X, y)}
                   p2={vec(PLOT_PADDING_X + plotWidth, y)}
-                  color={GRID_COLOR}
+                  color={colors.chartGrid}
                   strokeWidth={1}
                 />
               );
@@ -97,7 +98,7 @@ export function SleepTimeRangeChart({ points, height }: SleepTimeRangeChartProps
                     y={y}
                     width={barWidth}
                     height={Math.max(h, 2)}
-                    color={COLOR}
+                    color={colors.chartSleepRange}
                     opacity={0.85}
                   />
                 );
@@ -125,7 +126,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: '100%',
-    backgroundColor: '#FFF',
   },
   yLabelColumn: {
     width: Y_LABEL_WIDTH,
@@ -137,7 +137,6 @@ const styles = StyleSheet.create({
     width: Y_LABEL_WIDTH - 4,
     textAlign: 'right',
     fontSize: 10,
-    color: LABEL_COLOR,
   },
   plot: {
     flex: 1,

@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { SNAP_MINUTES, TIMELINE_TOTAL_MINUTES } from '@/domain/sleep';
+import { useTheme } from '@/theme/useTheme';
 
 interface DragHandleProps {
   /** タイムラインの描画幅 (px)。 */
@@ -38,6 +39,7 @@ export function DragHandle({
   onCommit,
   accessibilityLabel,
 }: DragHandleProps) {
+  const { colors } = useTheme();
   const minToPxLocal = (m: number): number => (m / TIMELINE_TOTAL_MINUTES) * usableWidth;
   const translateX = useSharedValue(minToPxLocal(valueMin));
 
@@ -84,7 +86,13 @@ export function DragHandle({
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
       >
-        <Animated.View style={styles.visual} pointerEvents="none" />
+        <Animated.View
+          style={[
+            styles.visual,
+            { backgroundColor: colors.bgSecondary, borderColor: colors.accent },
+          ]}
+          pointerEvents="none"
+        />
       </Animated.View>
     </GestureDetector>
   );
@@ -107,8 +115,6 @@ const styles = StyleSheet.create({
     width: VISUAL_SIZE,
     height: VISUAL_SIZE,
     borderRadius: VISUAL_SIZE / 2,
-    backgroundColor: '#FFF',
     borderWidth: 2,
-    borderColor: '#3B5BDB',
   },
 });

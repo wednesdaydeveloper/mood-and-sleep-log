@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { CartesianChart, Line, Scatter } from 'victory-native';
 
 import { type ChartPoint } from '@/domain/chart-aggregation';
+import { useTheme } from '@/theme/useTheme';
 
 interface MoodChartProps {
   points: readonly ChartPoint[];
@@ -13,9 +14,8 @@ interface ChartDatum extends Record<string, unknown> {
   mood: number | null;
 }
 
-const COLOR = '#4CAF50';
-
 export function MoodChart({ points, height }: MoodChartProps) {
+  const { colors } = useTheme();
   const data: ChartDatum[] = points.map((p, index) => ({
     index,
     mood: p.mood,
@@ -32,16 +32,16 @@ export function MoodChart({ points, height }: MoodChartProps) {
         axisOptions={{
           tickCount: { x: Math.min(data.length, 6), y: 5 },
           labelOffset: { x: 4, y: 4 },
-          labelColor: '#888',
-          lineColor: '#E0E0E0',
+          labelColor: colors.textSecondary,
+          lineColor: colors.chartGrid,
           formatYLabel: (v) => `${v}`,
           formatXLabel: () => '',
         }}
       >
         {({ points: cp }) => (
           <>
-            <Line points={cp.mood} color={COLOR} strokeWidth={2} />
-            <Scatter points={cp.mood} shape="circle" radius={3} color={COLOR} />
+            <Line points={cp.mood} color={colors.chartMood} strokeWidth={2} />
+            <Scatter points={cp.mood} shape="circle" radius={3} color={colors.chartMood} />
           </>
         )}
       </CartesianChart>
