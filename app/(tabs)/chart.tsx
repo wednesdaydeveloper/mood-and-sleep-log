@@ -6,6 +6,7 @@ import { ChartXAxis } from '@/components/chart/ChartXAxis';
 import { MoodChart } from '@/components/chart/MoodChart';
 import { PeriodTabs } from '@/components/chart/PeriodTabs';
 import { SleepDurationChart } from '@/components/chart/SleepDurationChart';
+import { SleepTimeRangeChart } from '@/components/chart/SleepTimeRangeChart';
 import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 import {
   aggregateForMonth,
@@ -64,11 +65,7 @@ export default function ChartScreen() {
           </Section>
 
           <Section title="睡眠時間帯">
-            <View style={styles.placeholderRange}>
-              <Text style={styles.placeholderText}>
-                縦帯グラフは M5.2 で実装予定
-              </Text>
-            </View>
+            <SleepTimeRangeChart points={points} height={200} />
           </Section>
 
           <ChartXAxis points={points} period={period} />
@@ -107,12 +104,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#444',
   },
-  placeholderRange: {
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-    backgroundColor: '#FAFAFA',
-  },
-  placeholderText: { fontSize: 12, color: '#888' },
 });
