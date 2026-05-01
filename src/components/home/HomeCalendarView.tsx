@@ -1,0 +1,128 @@
+import { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Calendar, type DateData, LocaleConfig } from 'react-native-calendars';
+import { router } from 'expo-router';
+
+import { type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
+import { MOOD_EMOJI } from '@/domain/mood';
+import { todayIso } from '@/lib/date';
+
+LocaleConfig.locales.ja = {
+  monthNames: [
+    '1月', '2月', '3月', '4月', '5月', '6月',
+    '7月', '8月', '9月', '10月', '11月', '12月',
+  ],
+  monthNamesShort: [
+    '1月', '2月', '3月', '4月', '5月', '6月',
+    '7月', '8月', '9月', '10月', '11月', '12月',
+  ],
+  dayNames: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+  dayNamesShort: ['日', '月', '火', '水', '木', '金', '土'],
+  today: '今日',
+};
+LocaleConfig.defaultLocale = 'ja';
+
+interface HomeCalendarViewProps {
+  records: readonly DailyRecordWithIntervals[];
+}
+
+export function HomeCalendarView({ records }: HomeCalendarViewProps) {
+  const recordMap = useMemo(() => {
+    const map = new Map<string, DailyRecordWithIntervals>();
+    for (const r of records) map.set(r.date, r);
+    return map;
+  }, [records]);
+
+  const handleDayPress = (day: DateData) => {
+    router.push({ pathname: '/record/[date]', params: { date: day.dateString } });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Calendar
+        current={todayIso()}
+        maxDate={todayIso()}
+        onDayPress={handleDayPress}
+        firstDay={0}
+        dayComponent={({ date, state }) => {
+          if (!date) return <View style={styles.cell} />;
+          const record = recordMap.get(date.dateString);
+          const isDisabled = state === 'disabled';
+          return (
+            <Cell
+              dateString={date.dateString}
+              dayNum={date.day}
+              record={record}
+              disabled={isDisabled}
+              onPress={() => handleDayPress(date)}
+            />
+          );
+        }}
+        theme={{
+          textDayFontSize: 12,
+          textMonthFontSize: 16,
+          textMonthFontWeight: '600',
+        }}
+      />
+    </View>
+  );
+}
+
+interface CellProps {
+  dateString: string;
+  dayNum: number;
+  record: DailyRecordWithIntervals | undefined;
+  disabled: boolean;
+  onPress: () => void;
+}
+
+function Cell({ dayNum, record, disabled, onPress }: CellProps) {
+  return (
+    <View
+      style={[styles.cell, disabled && styles.cellDisabled]}
+      onTouchEnd={disabled ? undefined : onPress}
+    >
+      <Text style={[styles.dayNum, disabled && styles.dayNumDisabled]}>{dayNum}</Text>
+      {record ? (
+        <>
+          <Text style={styles.emoji}>{MOOD_EMOJI[record.moodScore]}</Text>
+          <Text style={styles.duration}>{formatHours(totalMinutes(record))}</Text>
+        </>
+      ) : (
+        <View style={styles.placeholder} />
+      )}
+    </View>
+  );
+}
+
+function totalMinutes(record: DailyRecordWithIntervals): number {
+  return record.intervals.reduce(
+    (sum, iv) => sum + (iv.endAt.getTime() - iv.startAt.getTime()) / 60000,
+    0,
+  );
+}
+
+function formatHours(minutes: number): string {
+  if (minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes - h * 60);
+  if (h > 0 && m > 0) return `${h}h${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#FFF' },
+  cell: {
+    width: 44,
+    minHeight: 56,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  cellDisabled: { opacity: 0.35 },
+  dayNum: { fontSize: 12, color: '#333' },
+  dayNumDisabled: { color: '#999' },
+  emoji: { fontSize: 18, marginTop: 2 },
+  duration: { fontSize: 9, color: '#666' },
+  placeholder: { height: 28 },
+});

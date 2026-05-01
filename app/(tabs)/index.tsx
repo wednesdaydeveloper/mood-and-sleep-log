@@ -1,22 +1,26 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
 
+import { HomeCalendarView } from '@/components/home/HomeCalendarView';
+import { HomeListView } from '@/components/home/HomeListView';
 import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
-import { MOOD_EMOJI } from '@/domain/mood';
-import { fromIsoDate, todayIso, yesterdayIso } from '@/lib/date';
+import { todayIso, yesterdayIso } from '@/lib/date';
+
+type ViewMode = 'list' | 'calendar';
 
 export default function HomeScreen() {
   const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      // 直近 90 日（M2 暫定。ページネーションは将来）
+      // 直近 1 年分（カレンダー表示で過去月もスクロール可能）
       const today = new Date();
       const past = new Date();
-      past.setDate(today.getDate() - 90);
+      past.setFullYear(today.getFullYear() - 1);
       const fromIso = isoOf(past);
       const toIso = todayIso();
       const fetched = await list(fromIso, toIso);
@@ -34,22 +38,22 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {records.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>まだ記録がありません</Text>
-          <Text style={styles.emptySubtitle}>
-            {loading ? '読み込み中...' : '右下のボタンから昨日の記録を追加しましょう'}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => <RecordRow record={item} />}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+      <View style={styles.tabsRow}>
+        <ViewModeTab label="リスト" active={viewMode === 'list'} onPress={() => setViewMode('list')} />
+        <ViewModeTab
+          label="カレンダー"
+          active={viewMode === 'calendar'}
+          onPress={() => setViewMode('calendar')}
         />
-      )}
+      </View>
+
+      <View style={styles.content}>
+        {viewMode === 'list' ? (
+          <HomeListView records={records} loading={loading} />
+        ) : (
+          <HomeCalendarView records={records} />
+        )}
+      </View>
 
       <Link
         href={{ pathname: '/record/[date]', params: { date: yesterdayIso() } }}
@@ -67,30 +71,22 @@ export default function HomeScreen() {
   );
 }
 
-function RecordRow({ record }: { record: DailyRecordWithIntervals }) {
-  const tagsPreview = record.moodTags.slice(0, 3).join('、');
-  const moreTags = record.moodTags.length > 3 ? ` +${record.moodTags.length - 3}` : '';
+interface ViewModeTabProps {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}
 
+function ViewModeTab({ label, active, onPress }: ViewModeTabProps) {
   return (
-    <Link
-      href={{ pathname: '/record/[date]', params: { date: record.date } }}
-      asChild
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      style={[styles.tab, active && styles.tabActive]}
     >
-      <Pressable accessibilityRole="button" style={styles.row}>
-        <Text style={styles.rowDate}>{formatRowDate(record.date)}</Text>
-        <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
-        <View style={styles.rowMeta}>
-          <Text style={styles.rowTags} numberOfLines={1}>
-            {record.moodTags.length > 0 ? `${tagsPreview}${moreTags}` : '-'}
-          </Text>
-          {record.memo && (
-            <Text style={styles.rowMemo} numberOfLines={1}>
-              {record.memo}
-            </Text>
-          )}
-        </View>
-      </Pressable>
-    </Link>
+      <Text style={[styles.tabText, active && styles.tabTextActive]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -99,37 +95,25 @@ function isoOf(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function formatRowDate(iso: string): string {
-  const d = fromIsoDate(iso);
-  const days = ['日', '月', '火', '水', '木', '金', '土'];
-  const today = todayIso();
-  const yesterday = yesterdayIso();
-  const dayLabel = `${d.getMonth() + 1}/${d.getDate()}(${days[d.getDay()]})`;
-  if (iso === today) return `今日 ${dayLabel}`;
-  if (iso === yesterday) return `昨日 ${dayLabel}`;
-  return dayLabel;
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FB' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-  emptySubtitle: { fontSize: 13, color: '#666', textAlign: 'center' },
-  listContent: { padding: 16 },
-  row: {
+  tabsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: 8,
-    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
   },
-  rowDate: { fontSize: 14, fontWeight: '600', minWidth: 92 },
-  rowEmoji: { fontSize: 24 },
-  rowMeta: { flex: 1, gap: 2 },
-  rowTags: { fontSize: 13, color: '#333' },
-  rowMemo: { fontSize: 12, color: '#888' },
-  separator: { height: 8 },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: { borderBottomColor: '#5B7FFF' },
+  tabText: { fontSize: 14, color: '#666' },
+  tabTextActive: { color: '#5B7FFF', fontWeight: '600' },
+  content: { flex: 1 },
   fab: {
     position: 'absolute',
     right: 24,
