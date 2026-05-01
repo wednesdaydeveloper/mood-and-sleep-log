@@ -4,10 +4,10 @@
 
 ## ステータス
 
-M1 (雛形+DB) 着手中。
+M1 (雛形+DB) 完了、M2 (記録の最小入力フロー) 着手前。
 - M1.1 ✅ プロジェクト雛形 + ボトムタブ3画面
-- M1.2 ⏳ DB スキーマ + SQLCipher
-- M1.3 ⏳ テスト基盤 + CI
+- M1.2 ✅ DB スキーマ + 起動時マイグレーション (Drizzle ORM + expo-sqlite)
+- M1.3 ✅ テスト基盤 (Jest + RNTL) + CI (GitHub Actions)
 
 ## ドキュメント
 
