@@ -16,7 +16,18 @@ let initialized = false;
 export async function initializeDatabase(): Promise<void> {
   if (initialized) return;
   await migrate(db, migrations);
+  await cleanupOnStart();
   initialized = true;
+}
+
+async function cleanupOnStart(): Promise<void> {
+  // 循環依存を避けるため動的 import
+  const { cleanupExpiredDrafts } = await import('./repositories/draft');
+  try {
+    await cleanupExpiredDrafts();
+  } catch {
+    // 起動時クリーンアップの失敗はアプリ機能に影響しないため無視
+  }
 }
 
 // iOS のクラウドバックアップ除外 (NSURLIsExcludedFromBackupKey) は
