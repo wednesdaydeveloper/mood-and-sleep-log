@@ -1,28 +1,118 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+
+import { ChartXAxis } from '@/components/chart/ChartXAxis';
+import { MoodChart } from '@/components/chart/MoodChart';
+import { PeriodTabs } from '@/components/chart/PeriodTabs';
+import { SleepDurationChart } from '@/components/chart/SleepDurationChart';
+import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
+import {
+  aggregateForMonth,
+  aggregateForWeek,
+  type ChartPeriod,
+  type ChartPoint,
+} from '@/domain/chart-aggregation';
+import { todayIso } from '@/lib/date';
 
 export default function ChartScreen() {
+  const [period, setPeriod] = useState<ChartPeriod>('week');
+  const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const past = new Date();
+      past.setFullYear(today.getFullYear() - 1);
+      const fetched = await list(toIso(past), toIso(today));
+      setRecords(fetched);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
+
+  const points: ChartPoint[] =
+    period === 'week'
+      ? aggregateForWeek(records, todayIso())
+      : period === 'month'
+        ? aggregateForMonth(records, todayIso())
+        : [];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>グラフ</Text>
-      <Text style={styles.subtitle}>3段パネル（M5/M6 で実装）</Text>
+      <PeriodTabs value={period} onChange={setPeriod} disabledPeriods={['year']} />
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content}>
+          <Section title="気分">
+            <MoodChart points={points} height={120} />
+          </Section>
+
+          <Section title="睡眠時間">
+            <SleepDurationChart points={points} height={120} />
+          </Section>
+
+          <Section title="睡眠時間帯">
+            <View style={styles.placeholderRange}>
+              <Text style={styles.placeholderText}>
+                縦帯グラフは M5.2 で実装予定
+              </Text>
+            </View>
+          </Section>
+
+          <ChartXAxis points={points} period={period} />
+        </ScrollView>
+      )}
     </View>
   );
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+function toIso(d: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: '#F8F9FB' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 12, gap: 12 },
+  section: {
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#444',
+  },
+  placeholderRange: {
+    height: 120,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    borderRadius: 4,
+    backgroundColor: '#FAFAFA',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
+  placeholderText: { fontSize: 12, color: '#888' },
 });

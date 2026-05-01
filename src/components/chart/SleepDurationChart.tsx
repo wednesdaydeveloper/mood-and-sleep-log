@@ -1,0 +1,61 @@
+import { StyleSheet, View } from 'react-native';
+import { CartesianChart, Line, Scatter } from 'victory-native';
+
+import { type ChartPoint } from '@/domain/chart-aggregation';
+
+interface SleepDurationChartProps {
+  points: readonly ChartPoint[];
+  height: number;
+}
+
+interface ChartDatum extends Record<string, unknown> {
+  index: number;
+  sleepHours: number | null;
+}
+
+const COLOR = '#1E88E5';
+
+export function SleepDurationChart({ points, height }: SleepDurationChartProps) {
+  const data: ChartDatum[] = points.map((p, index) => ({
+    index,
+    sleepHours: p.sleepMinutes !== null ? p.sleepMinutes / 60 : null,
+  }));
+
+  // データに応じて Y 軸範囲を自動算出（最低 5h-9h、データがあれば余白付き）
+  const valid = data.map((d) => d.sleepHours).filter((v): v is number => v !== null);
+  const min = Math.max(0, Math.floor((valid.length > 0 ? Math.min(...valid, 5) : 5) - 0.5));
+  const max = Math.ceil((valid.length > 0 ? Math.max(...valid, 9) : 9) + 0.5);
+
+  return (
+    <View style={[styles.container, { height }]}>
+      <CartesianChart<ChartDatum, 'index', 'sleepHours'>
+        data={data}
+        xKey="index"
+        yKeys={['sleepHours']}
+        domain={{ y: [min, max] }}
+        domainPadding={{ left: 12, right: 12, top: 8, bottom: 8 }}
+        axisOptions={{
+          tickCount: { x: Math.min(data.length, 6), y: 4 },
+          labelOffset: { x: 4, y: 4 },
+          labelColor: '#888',
+          lineColor: '#E0E0E0',
+          formatYLabel: (v) => `${v}h`,
+          formatXLabel: () => '',
+        }}
+      >
+        {({ points: cp }) => (
+          <>
+            <Line points={cp.sleepHours} color={COLOR} strokeWidth={2} />
+            <Scatter points={cp.sleepHours} shape="circle" radius={3} color={COLOR} />
+          </>
+        )}
+      </CartesianChart>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+  },
+});
