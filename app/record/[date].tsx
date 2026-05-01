@@ -24,6 +24,7 @@ import { type SleepInterval } from '@/domain/sleep';
 import { toDbInterval, toTimelineInterval } from '@/domain/sleep-mapping';
 import { useDebouncedEffect } from '@/hooks/use-debounced-effect';
 import { fromIsoDate } from '@/lib/date';
+import { logger } from '@/lib/logger';
 import { useTheme } from '@/theme/useTheme';
 
 const DRAFT_DEBOUNCE_MS = 500;
@@ -34,6 +35,7 @@ export default function RecordScreen() {
   const isoDate = typeof date === 'string' ? date : '';
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [intervals, setIntervals] = useState<SleepInterval[]>([]);
   const headerHeight = useHeaderHeight();
@@ -59,6 +61,7 @@ export default function RecordScreen() {
     let cancelled = false;
     void (async () => {
       try {
+        setLoadError(null);
         const [existing, draft] = await Promise.all([findByDate(isoDate), getDraft(isoDate)]);
         if (cancelled) return;
 
@@ -90,13 +93,27 @@ export default function RecordScreen() {
             {
               text: '破棄',
               style: 'destructive',
-              onPress: () => void removeDraft(isoDate),
+              onPress: () => {
+                removeDraft(isoDate).catch((e: unknown) =>
+                  logger.warn('record-screen', 'removeDraft failed', {
+                    date: isoDate,
+                    error: String(e),
+                  }),
+                );
+              },
             },
             { text: '復元', onPress: applyDraft },
           ]);
         } else {
           applyExisting();
         }
+      } catch (e: unknown) {
+        if (cancelled) return;
+        logger.error('record-screen', 'initial load failed', {
+          date: isoDate,
+          error: String(e),
+        });
+        setLoadError('記録の読み込みに失敗しました');
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -154,6 +171,22 @@ export default function RecordScreen() {
     return (
       <View style={[styles.center, { backgroundColor: colors.bgPrimary }]}>
         <Text style={{ color: colors.textPrimary }}>読み込み中...</Text>
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.bgPrimary }]}>
+        <Text style={[styles.errorText, { color: colors.danger }]}>{loadError}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="戻る"
+          onPress={() => router.back()}
+          style={styles.headerButton}
+        >
+          <Text style={[styles.headerButtonText, { color: colors.accent }]}>戻る</Text>
+        </Pressable>
       </View>
     );
   }
@@ -239,7 +272,11 @@ export default function RecordScreen() {
                 />
               )}
             />
-            {errors.memo && <Text style={styles.errorText}>{errors.memo.message}</Text>}
+            {errors.memo && (
+              <Text style={[styles.errorText, { color: colors.danger }]}>
+                {errors.memo.message}
+              </Text>
+            )}
           </Section>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -277,7 +314,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 14,
   },
-  errorText: { color: '#D32F2F', fontSize: 12 },
+  errorText: { fontSize: 14 },
   headerButton: { paddingHorizontal: 12, paddingVertical: 6 },
   headerButtonText: { fontSize: 16, fontWeight: '600' },
 });

@@ -1,5 +1,5 @@
 // 感情タグの固定プリセット（要件 §FR-1.2）
-// 4 カテゴリ、合計 31 タグ。ユーザー追加は不可（v1 スコープ）。
+// 4 カテゴリ、合計 30 タグ。ユーザー追加は不可（v1 スコープ）。
 
 export type TagCategory = 'negative' | 'positive' | 'state' | 'thought';
 

@@ -5,6 +5,7 @@ import { recordsToCsv } from '@/domain/csv';
 import type { DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 
 import { todayIso } from './date';
+import { logger } from './logger';
 
 export interface ShareCsvResult {
   status: 'shared' | 'unsupported' | 'empty' | 'failed';
@@ -43,6 +44,7 @@ export async function shareRecordsAsCsv(
     });
     return { status: 'shared' };
   } catch (e: unknown) {
+    logger.error('share', 'shareRecordsAsCsv failed', { error: String(e) });
     return {
       status: 'failed',
       message: e instanceof Error ? e.message : '不明なエラー',
