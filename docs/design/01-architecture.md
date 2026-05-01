@@ -10,7 +10,7 @@
 | 言語 | **TypeScript** (strict) | |
 | ナビゲーション | **expo-router** | ファイルベースルーティング |
 | 状態管理 | **Jotai** | アトミックステート |
-| DB | **expo-sqlite + Drizzle ORM** | 型安全、マイグレーション標準対応 |
+| DB | **expo-sqlite + Drizzle ORM** | 型安全、マイグレーション標準対応、暗号化なし（§11） |
 | グラフ | **Victory Native XL** | Skia ベース、折れ線・カスタム描画両対応 |
 | 日時 | **date-fns** | 関数ベース、ツリーシェイキング |
 | フォーム | **react-hook-form + zod** | バリデーション統合 |

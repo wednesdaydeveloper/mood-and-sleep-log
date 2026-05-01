@@ -14,11 +14,10 @@
 **ゴール**: 起動 → DB 初期化 → ボトムタブ3画面が表示
 
 - [ ] `npx create-expo-app` で雛形生成（TypeScript + expo-router テンプレ）
-- [ ] 依存追加: jotai, drizzle-orm, **op-sqlcipher**, **expo-secure-store**, date-fns, react-hook-form, zod, victory-native, @shopify/react-native-skia, react-native-gesture-handler, react-native-reanimated, expo-haptics, expo-sharing, expo-file-system, i18next, react-i18next, expo-localization
+- [ ] 依存追加: jotai, drizzle-orm, **expo-sqlite**, expo-crypto, date-fns, react-hook-form, zod, victory-native, @shopify/react-native-skia, react-native-gesture-handler, react-native-reanimated, expo-haptics, expo-sharing, expo-file-system, i18next, react-i18next, expo-localization
 - [ ] `src/db/schema.ts` 定義
 - [ ] `drizzle.config.ts` + 初回マイグレーション生成
 - [ ] `src/db/client.ts` で起動時マイグレーション適用
-- [ ] **SQLCipher 鍵生成・保存ロジック**（expo-secure-store、初回時にランダム鍵生成）
 - [ ] **クラウドバックアップ除外設定**（iOS: `setIsExcludedFromBackupAsync`、Android: `allowBackup=false`）
 - [ ] ボトムタブレイアウト（ホーム/グラフ/設定の3画面、中身は空）
 - [ ] テスト雛形: Jest 設定 + RNTL + Maestro `e2e/` ディレクトリ
