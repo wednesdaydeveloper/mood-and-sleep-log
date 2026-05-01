@@ -164,3 +164,6 @@ GoogleService-Info.plist
 .DS_Store
 Thumbs.db
 
+# Claude Code (per-project local settings, contains permission allowlist)
+.claude/
+
