@@ -4,12 +4,13 @@
 
 ## 1. 採用技術
 
-- **DB**: SQLite（端末ローカル、**SQLCipher で暗号化**、`op-sqlcipher`）
-- **鍵管理**: `expo-secure-store`（iOS Keychain / Android Keystore）
-- **ORM**: Drizzle ORM
+- **DB**: SQLite（端末ローカル、`expo-sqlite`、**plain（暗号化なし）**）
+- **ORM**: Drizzle ORM (`drizzle-orm/expo-sqlite`)
 - **マイグレーション**: drizzle-kit（`drizzle.config.ts` で生成、起動時に自動適用）
 - **ID生成**: `expo-crypto` の randomUUID()
 - **バックアップ**: クラウドバックアップから除外（§11）
+
+> **DB 暗号化について**: 当初 SQLCipher 採用を計画したが、Expo Go 互換のため不採用。詳細は §11 を参照。
 
 ## 2. テーブル定義（Drizzle スキーマ）
 

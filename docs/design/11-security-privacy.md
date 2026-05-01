@@ -12,27 +12,32 @@
 
 | 項目 | 内容 |
 |------|------|
-| 保存場所 | アプリのサンドボックス内 SQLite ファイル |
-| 暗号化（基本） | iOS: Data Protection (NSFileProtectionComplete)、Android: Auto Backup OFF + 内部ストレージ |
-| 暗号化（追加） | **SQLCipher 採用**（要件確認、推奨） |
+| 保存場所 | アプリのサンドボックス内 SQLite ファイル（plain `expo-sqlite`） |
+| 暗号化 | OS 標準のサンドボックス保護のみ（DB レベルの暗号化は不採用） |
 
-### SQLCipher 採用（確定）
+### DB 暗号化を不採用とした理由
 
-- **理由**: 健康データは平文で残したくない。端末を紛失して中身を抜かれるリスクへの備え
-- **実装**: `op-sqlcipher` パッケージ（Drizzle 互換）
-- **鍵管理**:
-  - 鍵を **expo-secure-store** に保存（iOS Keychain、Android Keystore）
-  - 初回起動時にランダム鍵（256bit）を生成
-  - アプリ削除と同時に鍵が消えるため、再インストールで全データ消失（自分専用なので許容）
-- **影響**:
-  - 初回起動の DB オープンが数百ms 程度遅くなる（許容範囲）
-  - 依存パッケージが増える（保守コスト微増）
+当初は SQLCipher 採用を検討したが、以下の理由で **plain `expo-sqlite`** を採用する:
+
+- **Expo Go との非互換**: SQLCipher（`op-sqlite` 経由）は Expo development build (dev client) が必須で、Expo Go で動かない
+- **開発フローの維持**: M2〜M6 の UI 実装フェーズで Expo Go の手軽な動作確認ループを保つ
+- **リスク評価**: 自分専用アプリで端末紛失時の脅威モデルは限定的、OS のサンドボックス保護で許容範囲
+
+### OS 標準の保護で得られる防御
+
+- **iOS**: アプリサンドボックス + Data Protection（端末ロック中はファイル暗号化）
+- **Android**: 内部ストレージ + アプリサンドボックス（root 化されていない端末では他アプリからアクセス不可）
+- アプリアンインストールで全データ消去
+
+### 将来の暗号化導入余地
+
+dev client へ移行する機会があれば `op-sqlite + SQLCipher` への切り替えは可能。鍵管理は `expo-secure-store`（iOS Keychain / Android Keystore）。§13 ロードマップに「DB 暗号化（v2.x）」として記載。
 
 ## 3. アプリロック
 
 **今回は実装しない**（v1 スコープ外）。
 
-理由: 自分専用で頻繁起動するためロックがストレスになる。SQLCipher で保存時暗号化しているため最低限の保護は確保される。
+理由: 自分専用で頻繁起動するためロックがストレスになる。OS 標準のサンドボックス保護で最低限のアクセス制限は確保される。
 
 将来必要になれば `expo-local-authentication` で追加（§13 ロードマップに含める）。
 
@@ -114,6 +119,7 @@ logger.log("info", "save", "saved", { hasMemo: !!data.memo, tagCount: data.moodT
 
 ## 12. 確定事項
 
-- ✅ **SQLCipher 採用**（鍵は expo-secure-store）
+- ✅ **DB 暗号化なし**（plain `expo-sqlite`、OS 標準のサンドボックス保護に依存）
 - ✅ **アプリロックなし**（v1 スコープ外）
 - ✅ **クラウドバックアップから除外**（移行は CSV エクスポート経由）
+- 🔮 **将来**: dev client 移行と一緒に SQLCipher 導入を検討（v2.x）
