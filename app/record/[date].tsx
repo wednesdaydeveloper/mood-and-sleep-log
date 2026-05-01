@@ -4,9 +4,12 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 
 import { MoodPicker } from '@/components/mood/MoodPicker';
+import { SleepTimeline } from '@/components/sleep-timeline/SleepTimeline';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { findByDate, upsert } from '@/db/repositories/daily-record';
 import { DEFAULT_FORM_VALUES, type RecordFormValues, recordFormSchema } from '@/domain/record-form';
+import { type SleepInterval } from '@/domain/sleep';
+import { toTimelineInterval } from '@/domain/sleep-mapping';
 import { fromIsoDate } from '@/lib/date';
 
 export default function RecordScreen() {
@@ -15,6 +18,7 @@ export default function RecordScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [intervals, setIntervals] = useState<SleepInterval[]>([]);
 
   const {
     control,
@@ -38,6 +42,7 @@ export default function RecordScreen() {
             moodTags: existing.moodTags,
             memo: existing.memo,
           });
+          setIntervals(existing.intervals.map((iv) => toTimelineInterval(isoDate, iv)));
         }
       })
       .finally(() => setLoading(false));
@@ -103,6 +108,8 @@ export default function RecordScreen() {
             )}
           />
         </Section>
+
+        <SleepTimeline intervals={intervals} />
 
         <Section title="🏷 感情タグ">
           <Controller
