@@ -1,1 +1,45 @@
 # mood-and-sleep-log
+
+気分・睡眠時間帯・睡眠時間を記録し、過去の傾向を可視化するモバイルアプリ（自分専用）。
+
+## ステータス
+
+設計フェーズ完了、実装着手前。
+
+## ドキュメント
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [要件定義書](docs/requirements/requirements.md) | 機能要件・非機能要件・受け入れ基準 |
+| [01 アーキテクチャ](docs/design/01-architecture.md) | 技術スタック、レイヤー構成 |
+| [02 睡眠タイムラインUI](docs/design/02-sleep-timeline-ui.md) | ドラッグ入力UIの詳細 |
+| [03 グラフパネル](docs/design/03-chart-panel.md) | 3段グラフの設計 |
+| [04 データ設計](docs/design/04-data-design.md) | DBスキーマ、CSV仕様 |
+| [05 画面設計](docs/design/05-screen-design.md) | ワイヤーフレーム、画面遷移 |
+| [06 実装計画](docs/design/06-implementation-plan.md) | マイルストーン M1〜M7 |
+| [07 CI/CD・リリース](docs/design/07-cicd-release.md) | GitHub Actions、EAS、配布 |
+| [08 デザインシステム](docs/design/08-design-system.md) | トークン、タイポ、コンポーネント |
+| [09 エラー処理・ログ](docs/design/09-error-logging.md) | クラッシュ対応、ログ設計 |
+| [10 E2Eシナリオ](docs/design/10-e2e-scenarios.md) | Maestro テストケース |
+| [11 セキュリティ・プライバシー](docs/design/11-security-privacy.md) | データ保護方針 |
+| [12 i18n](docs/design/12-i18n.md) | ローカライズ戦略 |
+| [13 将来ロードマップ](docs/design/13-future-roadmap.md) | スコープ外機能の見通し |
+| [14 オンボーディング](docs/design/14-onboarding.md) | 初回起動チュートリアル |
+| [15 GitHub管理運用](docs/design/15-github-management.md) | リポジトリ・Issue・PR・リリース運用 |
+
+## 技術スタック
+
+Expo (managed) + TypeScript + expo-router + Jotai + Drizzle ORM + expo-sqlite + Victory Native XL + Skia
+
+## セットアップ
+
+```bash
+npm install
+npx expo start
+```
+
+詳細は [01-architecture.md](docs/design/01-architecture.md) を参照。
+
+## ライセンス
+
+Private（自分専用、公開予定なし）。
