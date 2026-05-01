@@ -14,16 +14,31 @@ interface ChartXAxisProps {
  * - week: すべての日付
  * - month: 7 日ごと（週単位）
  * - year: 月ごと（M6 で対応）
+ *
+ * セル幅が狭い場合でもラベルが折り返されないよう、
+ * 各ラベルを絶対配置で中央揃えにし numberOfLines={1} で 1 行に固定する。
  */
 export function ChartXAxis({ points, period }: ChartXAxisProps) {
-  const labelPositions = computeLabelPositions(points.length, period);
+  const labelIndices = computeLabelPositions(points.length, period);
+  const count = points.length;
+
   return (
-    <View style={styles.row}>
-      {points.map((p, index) => (
-        <View key={p.dateIso} style={styles.cell}>
-          {labelPositions.has(index) ? <Text style={styles.label}>{p.label}</Text> : null}
-        </View>
-      ))}
+    <View style={styles.container}>
+      {Array.from(labelIndices).map((index) => {
+        const p = points[index];
+        if (!p) return null;
+        // 列の中心位置を 0..1 で表現（domainPadding を考慮しない簡易版）
+        const ratio = count > 1 ? index / (count - 1) : 0.5;
+        return (
+          <Text
+            key={p.dateIso}
+            style={[styles.label, { left: `${ratio * 100}%` }]}
+            numberOfLines={1}
+          >
+            {p.label}
+          </Text>
+        );
+      })}
     </View>
   );
 }
@@ -36,9 +51,9 @@ function computeLabelPositions(count: number, period: ChartPeriod): Set<number> 
     return set;
   }
   if (period === 'month') {
-    // 7 日ごと（最後も入れる）
-    for (let i = 0; i < count; i += 7) set.add(i);
-    set.add(count - 1);
+    // 末尾（今日）から逆算して 7 日ごと。
+    // 例: 30日表示なら 5/1, 4/24, 4/17, 4/10, 4/3 にラベル
+    for (let i = count - 1; i >= 0; i -= 7) set.add(i);
     return set;
   }
   // year は M6 で実装。当面は両端のみ
@@ -48,17 +63,18 @@ function computeLabelPositions(count: number, period: ChartPeriod): Set<number> 
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingTop: 4,
-  },
-  cell: {
-    flex: 1,
-    alignItems: 'center',
+  container: {
+    height: 18,
+    marginHorizontal: 12,
+    position: 'relative',
   },
   label: {
+    position: 'absolute',
+    top: 2,
     fontSize: 10,
     color: '#666',
+    width: 40,
+    marginLeft: -20, // 中央揃え
+    textAlign: 'center',
   },
 });
