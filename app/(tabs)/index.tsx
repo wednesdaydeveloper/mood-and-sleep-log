@@ -6,6 +6,7 @@ import { HomeCalendarView } from '@/components/home/HomeCalendarView';
 import { HomeListView } from '@/components/home/HomeListView';
 import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 import { todayIso, yesterdayIso } from '@/lib/date';
+import { logger } from '@/lib/logger';
 import { useTheme } from '@/theme/useTheme';
 
 type ViewMode = 'list' | 'calendar';
@@ -14,10 +15,12 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const today = new Date();
       const past = new Date();
@@ -26,6 +29,9 @@ export default function HomeScreen() {
       const toIso = todayIso();
       const fetched = await list(fromIso, toIso);
       setRecords(fetched);
+    } catch (e: unknown) {
+      logger.error('home-screen', 'list reload failed', { error: String(e) });
+      setLoadError('記録一覧の読み込みに失敗しました');
     } finally {
       setLoading(false);
     }
@@ -54,7 +60,11 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
-        {viewMode === 'list' ? (
+        {loadError ? (
+          <View style={styles.errorBox}>
+            <Text style={[styles.errorText, { color: colors.danger }]}>{loadError}</Text>
+          </View>
+        ) : viewMode === 'list' ? (
           <HomeListView records={records} loading={loading} />
         ) : (
           <HomeCalendarView records={records} />
@@ -129,6 +139,8 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 14 },
   tabTextActive: { fontWeight: '600' },
   content: { flex: 1 },
+  errorBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  errorText: { fontSize: 14, textAlign: 'center' },
   fab: {
     position: 'absolute',
     right: 24,

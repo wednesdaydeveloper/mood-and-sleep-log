@@ -3,7 +3,8 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from '../client';
 import { dailyRecord, sleepInterval } from '../schema';
 import { newId } from '@/lib/id';
-import type { MoodScore } from '@/domain/mood';
+import { logger } from '@/lib/logger';
+import { isMoodScore, type MoodScore } from '@/domain/mood';
 import { parseMoodTags, serializeMoodTags } from '@/domain/record-serialization';
 
 export interface DailyRecordWithIntervals {
@@ -113,10 +114,22 @@ interface RawDailyRecord {
 }
 
 function toDomain(raw: RawDailyRecord): DailyRecordWithIntervals {
+  let moodScore: MoodScore;
+  if (isMoodScore(raw.moodScore)) {
+    moodScore = raw.moodScore;
+  } else {
+    // DB が壊れている場合のフォールバック。0（普通）に丸めてユーザーが上書き可能に
+    logger.warn('daily-record-repo', 'invalid moodScore in DB, falling back to 0', {
+      date: raw.date,
+      raw: raw.moodScore,
+    });
+    moodScore = 0;
+  }
+
   return {
     id: raw.id,
     date: raw.date,
-    moodScore: raw.moodScore as MoodScore,
+    moodScore,
     moodTags: parseMoodTags(raw.moodTags),
     memo: raw.memo,
     intervals: raw.intervals.map((iv) => ({

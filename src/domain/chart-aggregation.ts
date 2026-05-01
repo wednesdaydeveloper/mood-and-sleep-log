@@ -103,21 +103,23 @@ function buildYearPoint(monthIso: string, group: readonly DailyRecordWithInterva
   const moodSum = group.reduce((s, r) => s + r.moodScore, 0);
   const meanMood = moodSum / group.length;
 
-  // 各日の sleepMinutes / 区間を 21:00 起点の分単位に揃え、月平均を取る
+  // 各日の睡眠データを 21:00 起点の分単位に揃え、月平均を取る。
+  // - 就寝（startMin）: その日の最早開始
+  // - 起床（endMin）: その日の最遅終了
+  // 設計 §03 §11 に従い、21:00 起点の分単位 [0, 840] で算術平均する。
   const dailyTotals: number[] = [];
   const dailyStartMins: number[] = [];
   const dailyEndMins: number[] = [];
   for (const r of group) {
     const intervals = r.intervals.map((iv) => toTimelineInterval(r.date, iv));
+    if (intervals.length === 0) continue;
     const total = intervals.reduce((s, i) => s + (i.endMin - i.startMin), 0);
-    if (total > 0) {
-      dailyTotals.push(total);
-      // その日の最早開始と最遅終了を代表値に
-      const earliestStart = Math.min(...intervals.map((i) => i.startMin));
-      const latestEnd = Math.max(...intervals.map((i) => i.endMin));
-      dailyStartMins.push(earliestStart);
-      dailyEndMins.push(latestEnd);
-    }
+    if (total <= 0) continue;
+    dailyTotals.push(total);
+    const startMins = intervals.map((i) => i.startMin);
+    const endMins = intervals.map((i) => i.endMin);
+    dailyStartMins.push(Math.min(...startMins));
+    dailyEndMins.push(Math.max(...endMins));
   }
 
   const sleepMinutes = dailyTotals.length > 0 ? mean(dailyTotals) : null;

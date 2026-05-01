@@ -23,10 +23,13 @@ export async function initializeDatabase(): Promise<void> {
 async function cleanupOnStart(): Promise<void> {
   // 循環依存を避けるため動的 import
   const { cleanupExpiredDrafts } = await import('./repositories/draft');
+  const { logger } = await import('@/lib/logger');
   try {
     await cleanupExpiredDrafts();
-  } catch {
-    // 起動時クリーンアップの失敗はアプリ機能に影響しないため無視
+  } catch (e) {
+    // 起動時クリーンアップの失敗はアプリ機能に影響しないが、
+    // 沈黙させずにログには残す
+    logger.warn('db-client', 'cleanupOnStart failed', { error: String(e) });
   }
 }
 

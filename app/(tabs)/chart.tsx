@@ -27,6 +27,7 @@ import {
   type ChartPoint,
 } from '@/domain/chart-aggregation';
 import { fromIsoDate, toIsoDate, todayIso } from '@/lib/date';
+import { logger } from '@/lib/logger';
 import { useTheme } from '@/theme/useTheme';
 
 export default function ChartScreen() {
@@ -35,17 +36,22 @@ export default function ChartScreen() {
   const [endIso, setEndIso] = useState(todayIso());
   const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const today = new Date();
       const past = new Date();
       past.setFullYear(today.getFullYear() - 1);
       const fetched = await list(toIsoDate(past), todayIso());
       setRecords(fetched);
+    } catch (e: unknown) {
+      logger.error('chart-screen', 'list reload failed', { error: String(e) });
+      setLoadError('グラフデータの読み込みに失敗しました');
     } finally {
       setLoading(false);
     }
@@ -123,7 +129,11 @@ export default function ChartScreen() {
         onPrev={handlePrev}
         onNext={handleNext}
       />
-      {loading ? (
+      {loadError ? (
+        <View style={styles.center}>
+          <Text style={[styles.errorText, { color: colors.danger }]}>{loadError}</Text>
+        </View>
+      ) : loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -150,7 +160,7 @@ export default function ChartScreen() {
             </Section>
 
             <Section title="睡眠時間帯">
-              <SleepTimeRangeChart points={points} height={200} />
+              <SleepTimeRangeChart points={points} height={240} />
             </Section>
 
             <ChartXAxis points={points} period={period} />
@@ -195,4 +205,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  errorText: { fontSize: 14, textAlign: 'center', padding: 24 },
 });

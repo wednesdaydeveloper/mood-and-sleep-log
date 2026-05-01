@@ -1,20 +1,39 @@
 import { eq, lt } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { db } from '../client';
 import { draftRecord } from '../schema';
 
+import { logger } from '@/lib/logger';
 import type { MoodScore } from '@/domain/mood';
+import { isValidTagName } from '@/domain/tags';
 
 /** 下書きの保持期間: 最終更新から 7 日。 */
 export const DRAFT_TTL_DAYS = 7;
 
-export interface DraftPayload {
-  moodScore: MoodScore;
-  moodTags: string[];
-  memo: string | null;
-  /** タイムライン分 (21:00 起点) で保存。DB 保存時の Date 化を避けて軽量に。 */
-  intervals: { id: string; startMin: number; endMin: number }[];
-}
+const draftPayloadSchema = z.object({
+  moodScore: z.union([
+    z.literal(-2),
+    z.literal(-1),
+    z.literal(0),
+    z.literal(1),
+    z.literal(2),
+  ]),
+  moodTags: z.array(z.string().refine(isValidTagName)),
+  memo: z.string().nullable(),
+  intervals: z.array(
+    z.object({
+      id: z.string(),
+      startMin: z.number().int(),
+      endMin: z.number().int(),
+    }),
+  ),
+});
+
+export type DraftPayload = z.infer<typeof draftPayloadSchema>;
+// MoodScore 型との整合性を型レベルで担保
+const _moodScoreCheck: DraftPayload['moodScore'] = 0 as MoodScore;
+void _moodScoreCheck;
 
 export interface DraftRecord {
   date: string;
@@ -27,7 +46,7 @@ export async function getDraft(date: string): Promise<DraftRecord | null> {
     where: eq(draftRecord.date, date),
   });
   if (!row) return null;
-  const parsed = safeParse(row.payload);
+  const parsed = safeParse(row.payload, date);
   if (!parsed) return null;
   return { date: row.date, payload: parsed, updatedAt: row.updatedAt };
 }
@@ -58,12 +77,21 @@ export async function cleanupExpiredDrafts(): Promise<void> {
   await cleanupDraftsOlderThan(threshold);
 }
 
-function safeParse(json: string): DraftPayload | null {
+function safeParse(json: string, date: string): DraftPayload | null {
+  let raw: unknown;
   try {
-    const parsed = JSON.parse(json);
-    if (typeof parsed !== 'object' || parsed === null) return null;
-    return parsed as DraftPayload;
-  } catch {
+    raw = JSON.parse(json);
+  } catch (e) {
+    logger.warn('draft', 'JSON parse failed', { date, error: String(e) });
     return null;
   }
+  const result = draftPayloadSchema.safeParse(raw);
+  if (!result.success) {
+    logger.warn('draft', 'schema validation failed', {
+      date,
+      issues: result.error.issues.length,
+    });
+    return null;
+  }
+  return result.data;
 }
