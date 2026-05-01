@@ -23,6 +23,13 @@ describe('fromIsoDate', () => {
     const iso = '2026-04-30';
     expect(toIsoDate(fromIsoDate(iso))).toBe(iso);
   });
+
+  it.each(['', '2026', '2026-04', '2026/04/30', 'not-a-date', '2026-4-30'])(
+    'throws for invalid input %p',
+    (input) => {
+      expect(() => fromIsoDate(input)).toThrow();
+    },
+  );
 });
 
 describe('yesterdayIso vs todayIso', () => {

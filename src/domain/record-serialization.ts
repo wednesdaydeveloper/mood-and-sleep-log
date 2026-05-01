@@ -1,6 +1,8 @@
 // DailyRecord と DB スキーマの間のシリアライズ補助。
 // moodTags は SQLite の TEXT カラムに JSON 配列文字列として格納する（要件設計 §6）。
 
+import { logger } from '@/lib/logger';
+
 import { isValidTagName } from './tags';
 
 /**
@@ -21,9 +23,22 @@ export function parseMoodTags(serialized: string | null | undefined): string[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(serialized);
-  } catch {
+  } catch (e) {
+    logger.warn('record-serialization', 'parseMoodTags JSON failed', { error: String(e) });
     return [];
   }
-  if (!Array.isArray(parsed)) return [];
-  return parsed.filter((value): value is string => typeof value === 'string' && isValidTagName(value));
+  if (!Array.isArray(parsed)) {
+    logger.warn('record-serialization', 'parseMoodTags non-array payload');
+    return [];
+  }
+  const valid = parsed.filter(
+    (value): value is string => typeof value === 'string' && isValidTagName(value),
+  );
+  if (valid.length !== parsed.length) {
+    logger.warn('record-serialization', 'parseMoodTags filtered unknown tags', {
+      raw: parsed.length,
+      valid: valid.length,
+    });
+  }
+  return valid;
 }

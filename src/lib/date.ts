@@ -8,10 +8,24 @@ export function toIsoDate(date: Date): string {
   return `${date.getFullYear()}-${PAD(date.getMonth() + 1)}-${PAD(date.getDate())}`;
 }
 
-/** ISO yyyy-MM-dd を端末ローカルタイムゾーンの 0:00:00 の Date に変換する。 */
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * ISO yyyy-MM-dd を端末ローカルタイムゾーンの 0:00:00 の Date に変換する。
+ * 不正な形式や数値の場合は例外を投げる（NaN Date の下流伝播を防ぐ）。
+ */
 export function fromIsoDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y!, (m ?? 1) - 1, d ?? 1);
+  const match = ISO_DATE_PATTERN.exec(iso);
+  if (!match) {
+    throw new Error(`Invalid ISO date string: "${iso}"`);
+  }
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    throw new Error(`Invalid ISO date string: "${iso}"`);
+  }
+  return new Date(y, m - 1, d);
 }
 
 /** 今日の日付を ISO yyyy-MM-dd で返す。 */
