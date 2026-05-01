@@ -9,19 +9,23 @@ import { useTheme } from '@/theme/useTheme';
 interface HomeListViewProps {
   records: readonly DailyRecordWithIntervals[];
   loading: boolean;
+  /** 検索/絞り込みを適用中。空状態メッセージを切替えるのに使う。 */
+  isFiltering?: boolean;
 }
 
-export function HomeListView({ records, loading }: HomeListViewProps) {
+export function HomeListView({ records, loading, isFiltering }: HomeListViewProps) {
   const { colors } = useTheme();
   if (records.length === 0) {
+    const title = isFiltering ? '該当する記録がありません' : 'まだ記録がありません';
+    const subtitle = isFiltering
+      ? '検索条件を変更してみてください'
+      : loading
+        ? '読み込み中...'
+        : '右下のボタンから昨日の記録を追加しましょう';
     return (
       <View style={styles.empty}>
-        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-          まだ記録がありません
-        </Text>
-        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-          {loading ? '読み込み中...' : '右下のボタンから昨日の記録を追加しましょう'}
-        </Text>
+        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{title}</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
       </View>
     );
   }

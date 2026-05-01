@@ -1,10 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
 
 import { HomeCalendarView } from '@/components/home/HomeCalendarView';
 import { HomeListView } from '@/components/home/HomeListView';
+import { SearchBar } from '@/components/home/SearchBar';
+import { TagFilterChips } from '@/components/home/TagFilterChips';
 import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
+import { filterRecords } from '@/domain/record-filter';
 import { todayIso, yesterdayIso } from '@/lib/date';
 import { logger } from '@/lib/logger';
 import { useTheme } from '@/theme/useTheme';
@@ -17,6 +20,15 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [keyword, setKeyword] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const filteredRecords = useMemo(
+    () => filterRecords(records, { keyword, selectedTags }),
+    [records, keyword, selectedTags],
+  );
+
+  const isFiltering = keyword.trim() !== '' || selectedTags.length > 0;
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -59,13 +71,29 @@ export default function HomeScreen() {
         />
       </View>
 
+      {viewMode === 'list' && !loadError && (
+        <View
+          style={[
+            styles.searchArea,
+            { backgroundColor: colors.bgSecondary, borderBottomColor: colors.border },
+          ]}
+        >
+          <SearchBar value={keyword} onChange={setKeyword} />
+          <TagFilterChips value={selectedTags} onChange={setSelectedTags} />
+        </View>
+      )}
+
       <View style={styles.content}>
         {loadError ? (
           <View style={styles.errorBox}>
             <Text style={[styles.errorText, { color: colors.danger }]}>{loadError}</Text>
           </View>
         ) : viewMode === 'list' ? (
-          <HomeListView records={records} loading={loading} />
+          <HomeListView
+            records={filteredRecords}
+            loading={loading}
+            isFiltering={isFiltering}
+          />
         ) : (
           <HomeCalendarView records={records} />
         )}
@@ -139,6 +167,13 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 14 },
   tabTextActive: { fontWeight: '600' },
   content: { flex: 1 },
+  searchArea: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   errorBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   errorText: { fontSize: 14, textAlign: 'center' },
   fab: {
