@@ -1,0 +1,33 @@
+appId: com.wednesdaydeveloper.moodandsleeplog
+name: 基本的な記録作成フロー
+tags:
+  - record
+  - smoke
+---
+- runFlow: ../reset.yaml
+
+# ホームから FAB をタップ → 入力画面へ
+- tapOn:
+    accessibilityLabel: '昨日の記録を追加'
+
+# 気分: +1 を選択
+- tapOn:
+    accessibilityLabel: '気分: 良い'
+
+# タグ: 楽しい を選択
+- tapOn:
+    accessibilityLabel: 'タグ: 楽しい'
+
+# メモ入力
+- tapOn:
+    text: '今日の気持ちや出来事...'
+- inputText: 'E2E テストからの記録'
+
+# 保存
+- tapOn:
+    accessibilityLabel: '保存'
+
+# ホームに戻り、リストに反映
+- assertVisible:
+    text: 'E2E テストからの記録'
+- assertVisible: '🙂'

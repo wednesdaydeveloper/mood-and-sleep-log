@@ -1,0 +1,23 @@
+appId: com.wednesdaydeveloper.moodandsleeplog
+name: ホーム画面のリスト/カレンダー切替
+tags:
+  - home
+  - smoke
+---
+- launchApp
+
+# 既定のリストタブが選択された状態で起動
+- assertVisible:
+    accessibilityLabel: 'リスト'
+
+# カレンダーへ切替
+- tapOn:
+    accessibilityLabel: 'カレンダー'
+
+# カレンダー UI が現れることを確認（曜日ヘッダの「日」が表示）
+- assertVisible:
+    text: '日'
+
+# リストへ戻す
+- tapOn:
+    accessibilityLabel: 'リスト'
