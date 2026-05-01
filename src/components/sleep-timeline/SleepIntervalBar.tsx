@@ -9,6 +9,8 @@ import {
   type SleepInterval,
 } from '@/domain/sleep';
 
+import { useTheme } from '@/theme/useTheme';
+
 import { DragHandle } from './DragHandle';
 
 interface SleepIntervalBarProps {
@@ -28,6 +30,7 @@ export function SleepIntervalBar({
   onUpdate,
   onDelete,
 }: SleepIntervalBarProps) {
+  const { colors } = useTheme();
   const left = minToPx(interval.startMin, usableWidth);
   const width = Math.max(minToPx(interval.endMin - interval.startMin, usableWidth), 4);
 
@@ -68,7 +71,7 @@ export function SleepIntervalBar({
         delayLongPress={500}
         accessibilityRole="button"
         accessibilityLabel={`睡眠区間: ${formatTimelineMinute(interval.startMin)} 〜 ${formatTimelineMinute(interval.endMin)}（長押しで削除）`}
-        style={[styles.bar, { left, width }]}
+        style={[styles.bar, { left, width, backgroundColor: colors.accent }]}
       />
 
       <DragHandle
@@ -117,7 +120,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     bottom: 6,
-    backgroundColor: '#5B7FFF',
     borderRadius: 6,
     opacity: 0.85,
   },

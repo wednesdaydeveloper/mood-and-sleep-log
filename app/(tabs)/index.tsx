@@ -6,10 +6,12 @@ import { HomeCalendarView } from '@/components/home/HomeCalendarView';
 import { HomeListView } from '@/components/home/HomeListView';
 import { list, type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 import { todayIso, yesterdayIso } from '@/lib/date';
+import { useTheme } from '@/theme/useTheme';
 
 type ViewMode = 'list' | 'calendar';
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -17,7 +19,6 @@ export default function HomeScreen() {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      // 直近 1 年分（カレンダー表示で過去月もスクロール可能）
       const today = new Date();
       const past = new Date();
       past.setFullYear(today.getFullYear() - 1);
@@ -37,8 +38,13 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabsRow}>
+    <View style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
+      <View
+        style={[
+          styles.tabsRow,
+          { backgroundColor: colors.bgSecondary, borderBottomColor: colors.border },
+        ]}
+      >
         <ViewModeTab label="リスト" active={viewMode === 'list'} onPress={() => setViewMode('list')} />
         <ViewModeTab
           label="カレンダー"
@@ -62,9 +68,9 @@ export default function HomeScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="昨日の記録を追加"
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.fab }]}
         >
-          <Text style={styles.fabText}>＋</Text>
+          <Text style={[styles.fabText, { color: colors.textOnAccent }]}>＋</Text>
         </Pressable>
       </Link>
     </View>
@@ -78,14 +84,26 @@ interface ViewModeTabProps {
 }
 
 function ViewModeTab({ label, active, onPress }: ViewModeTabProps) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
-      style={[styles.tab, active && styles.tabActive]}
+      style={[
+        styles.tab,
+        active && { borderBottomColor: colors.tabBarActive },
+      ]}
     >
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>{label}</Text>
+      <Text
+        style={[
+          styles.tabText,
+          { color: active ? colors.tabBarActive : colors.textSecondary },
+          active && styles.tabTextActive,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -96,12 +114,10 @@ function isoOf(date: Date): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
+  container: { flex: 1 },
   tabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E0E0E0',
   },
   tab: {
     flex: 1,
@@ -110,9 +126,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: '#5B7FFF' },
-  tabText: { fontSize: 14, color: '#666' },
-  tabTextActive: { color: '#5B7FFF', fontWeight: '600' },
+  tabText: { fontSize: 14 },
+  tabTextActive: { fontWeight: '600' },
   content: { flex: 1 },
   fab: {
     position: 'absolute',
@@ -121,7 +136,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#5B7FFF',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -130,5 +144,5 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  fabText: { color: '#FFF', fontSize: 28, fontWeight: '600', lineHeight: 30 },
+  fabText: { fontSize: 28, fontWeight: '600', lineHeight: 30 },
 });

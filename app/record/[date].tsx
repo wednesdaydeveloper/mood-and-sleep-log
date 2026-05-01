@@ -24,10 +24,12 @@ import { type SleepInterval } from '@/domain/sleep';
 import { toDbInterval, toTimelineInterval } from '@/domain/sleep-mapping';
 import { useDebouncedEffect } from '@/hooks/use-debounced-effect';
 import { fromIsoDate } from '@/lib/date';
+import { useTheme } from '@/theme/useTheme';
 
 const DRAFT_DEBOUNCE_MS = 500;
 
 export default function RecordScreen() {
+  const { colors } = useTheme();
   const { date } = useLocalSearchParams<{ date: string }>();
   const isoDate = typeof date === 'string' ? date : '';
 
@@ -150,8 +152,8 @@ export default function RecordScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text>読み込み中...</Text>
+      <View style={[styles.center, { backgroundColor: colors.bgPrimary }]}>
+        <Text style={{ color: colors.textPrimary }}>読み込み中...</Text>
       </View>
     );
   }
@@ -164,11 +166,18 @@ export default function RecordScreen() {
           headerRight: () => (
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="保存"
+              accessibilityState={{ disabled: saving }}
               onPress={handleSubmit(onSubmit)}
               disabled={saving}
               style={styles.headerButton}
             >
-              <Text style={[styles.headerButtonText, saving && styles.disabled]}>
+              <Text
+                style={[
+                  styles.headerButtonText,
+                  { color: saving ? colors.textDisabled : colors.accent },
+                ]}
+              >
                 {saving ? '保存中...' : '保存'}
               </Text>
             </Pressable>
@@ -176,7 +185,7 @@ export default function RecordScreen() {
         }}
       />
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={[styles.flex, { backgroundColor: colors.bgPrimary }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
@@ -213,10 +222,17 @@ export default function RecordScreen() {
               name="memo"
               render={({ field }) => (
                 <TextInput
-                  style={styles.memoInput}
+                  style={[
+                    styles.memoInput,
+                    {
+                      backgroundColor: colors.bgSecondary,
+                      borderColor: colors.border,
+                      color: colors.textPrimary,
+                    },
+                  ]}
                   multiline
                   placeholder="今日の気持ちや出来事..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textDisabled}
                   value={field.value ?? ''}
                   onChangeText={(text) => field.onChange(text === '' ? null : text)}
                   textAlignVertical="top"
@@ -232,9 +248,10 @@ export default function RecordScreen() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
       {children}
     </View>
   );
@@ -252,18 +269,15 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 24, paddingBottom: 48 },
   section: { gap: 8 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
+  sectionTitle: { fontSize: 14, fontWeight: '600' },
   memoInput: {
     minHeight: 100,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    backgroundColor: '#FFF',
   },
   errorText: { color: '#D32F2F', fontSize: 12 },
   headerButton: { paddingHorizontal: 12, paddingVertical: 6 },
-  headerButtonText: { color: '#5B7FFF', fontSize: 16, fontWeight: '600' },
-  disabled: { color: '#AAA' },
+  headerButtonText: { fontSize: 16, fontWeight: '600' },
 });

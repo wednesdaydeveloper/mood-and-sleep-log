@@ -27,8 +27,10 @@ import {
   type ChartPoint,
 } from '@/domain/chart-aggregation';
 import { fromIsoDate, toIsoDate, todayIso } from '@/lib/date';
+import { useTheme } from '@/theme/useTheme';
 
 export default function ChartScreen() {
+  const { colors } = useTheme();
   const [period, setPeriod] = useState<ChartPeriod>('week');
   const [endIso, setEndIso] = useState(todayIso());
   const [records, setRecords] = useState<DailyRecordWithIntervals[]>([]);
@@ -112,7 +114,7 @@ export default function ChartScreen() {
     selectedIndex !== null && points.length > 1 ? selectedIndex / (points.length - 1) : 0.5;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
       <PeriodTabs value={period} onChange={handlePeriodChange} />
       <PeriodNavigator
         period={period}
@@ -123,7 +125,7 @@ export default function ChartScreen() {
       />
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.accent} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
@@ -167,16 +169,17 @@ export default function ChartScreen() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={[styles.section, { backgroundColor: colors.bgSecondary }]}>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
+  container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 12 },
   chartArea: {
@@ -184,7 +187,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   section: {
-    backgroundColor: '#FFF',
     borderRadius: 8,
     padding: 12,
     gap: 8,
@@ -192,6 +194,5 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#444',
   },
 });
