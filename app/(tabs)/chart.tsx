@@ -152,11 +152,11 @@ export default function ChartScreen() {
             )}
 
             <Section title="気分">
-              <MoodChart points={points} height={120} />
+              <MoodChart points={points} height={140} period={period} />
             </Section>
 
             <Section title="睡眠時間">
-              <SleepDurationChart points={points} height={120} />
+              <SleepDurationChart points={points} height={140} period={period} />
             </Section>
 
             <Section title="睡眠時間帯">

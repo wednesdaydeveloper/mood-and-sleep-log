@@ -1,12 +1,21 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { matchFont } from '@shopify/react-native-skia';
 import { CartesianChart, Line, Scatter } from 'victory-native';
 
-import { type ChartPoint } from '@/domain/chart-aggregation';
+import { type ChartPeriod, type ChartPoint } from '@/domain/chart-aggregation';
 import { useTheme } from '@/theme/useTheme';
+
+import { computeXTickIndices } from './chart-x-ticks';
+
+const axisFont = matchFont({
+  fontFamily: Platform.select({ ios: 'Helvetica', default: 'sans-serif' }),
+  fontSize: 11,
+});
 
 interface SleepDurationChartProps {
   points: readonly ChartPoint[];
   height: number;
+  period: ChartPeriod;
 }
 
 interface ChartDatum extends Record<string, unknown> {
@@ -14,7 +23,7 @@ interface ChartDatum extends Record<string, unknown> {
   sleepHours: number | null;
 }
 
-export function SleepDurationChart({ points, height }: SleepDurationChartProps) {
+export function SleepDurationChart({ points, height, period }: SleepDurationChartProps) {
   const { colors } = useTheme();
   const data: ChartDatum[] = points.map((p, index) => ({
     index,
@@ -24,6 +33,8 @@ export function SleepDurationChart({ points, height }: SleepDurationChartProps) 
   const valid = data.map((d) => d.sleepHours).filter((v): v is number => v !== null);
   const min = Math.max(0, Math.floor((valid.length > 0 ? Math.min(...valid, 5) : 5) - 0.5));
   const max = Math.ceil((valid.length > 0 ? Math.max(...valid, 9) : 9) + 0.5);
+  const yTicks = makeIntegerTicks(min, max);
+  const xTicks = computeXTickIndices(points.length, period);
 
   return (
     <View style={[styles.container, { height }]}>
@@ -34,12 +45,14 @@ export function SleepDurationChart({ points, height }: SleepDurationChartProps) 
         domain={{ y: [min, max] }}
         domainPadding={{ left: 12, right: 12, top: 8, bottom: 8 }}
         axisOptions={{
-          tickCount: { x: Math.min(data.length, 6), y: 4 },
-          labelOffset: { x: 4, y: 4 },
-          labelColor: colors.textSecondary,
-          lineColor: colors.chartGrid,
+          font: axisFont,
+          tickValues: { x: xTicks, y: yTicks },
+          labelOffset: { x: 4, y: 6 },
+          labelColor: colors.textPrimary,
+          lineColor: { grid: { x: 'transparent', y: colors.chartGrid }, frame: colors.chartGrid },
+          lineWidth: { grid: { x: 0, y: 0.5 }, frame: 1 },
           formatYLabel: (v) => `${v}h`,
-          formatXLabel: () => '',
+          formatXLabel: (v) => points[v]?.label ?? '',
         }}
       >
         {({ points: cp }) => (
@@ -51,6 +64,16 @@ export function SleepDurationChart({ points, height }: SleepDurationChartProps) 
       </CartesianChart>
     </View>
   );
+}
+
+/** [min, max] の範囲で 1h 刻みの整数値ティックを返す（最大 6 個まで間引き）。 */
+function makeIntegerTicks(min: number, max: number): number[] {
+  const range = Math.max(0, max - min);
+  if (range === 0) return [min];
+  const step = Math.max(1, Math.ceil(range / 5));
+  const ticks: number[] = [];
+  for (let v = Math.ceil(min); v <= max; v += step) ticks.push(v);
+  return ticks;
 }
 
 const styles = StyleSheet.create({
