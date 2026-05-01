@@ -1,0 +1,5 @@
+appId: com.wednesdaydeveloper.moodandsleeplog
+---
+- launchApp:
+    clearState: true
+- launchApp
