@@ -101,7 +101,12 @@ function Cell({ dayNum, record, disabled, onPress }: CellProps) {
       </Text>
       {record ? (
         <>
-          <Text style={styles.emoji}>{MOOD_EMOJI[record.moodScore]}</Text>
+          <View style={styles.moodRow}>
+            <Text style={styles.emoji}>{MOOD_EMOJI[record.moodScore]}</Text>
+            <Text style={[styles.moodScore, { color: colors.textSecondary }]}>
+              {formatMoodScore(record.moodScore)}
+            </Text>
+          </View>
           <Text style={[styles.duration, { color: colors.textSecondary }]}>
             {formatHours(totalMinutes(record))}
           </Text>
@@ -120,6 +125,11 @@ function totalMinutes(record: DailyRecordWithIntervals): number {
   );
 }
 
+function formatMoodScore(score: number): string {
+  if (score > 0) return `+${score}`;
+  return `${score}`;
+}
+
 function formatHours(minutes: number): string {
   if (minutes <= 0) return '';
   const h = Math.floor(minutes / 60);
@@ -133,13 +143,20 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   cell: {
     width: 44,
-    minHeight: 56,
+    minHeight: 64,
     alignItems: 'center',
     paddingVertical: 4,
   },
   cellDisabled: { opacity: 0.35 },
   dayNum: { fontSize: 12 },
-  emoji: { fontSize: 18, marginTop: 2 },
+  moodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 1,
+    marginTop: 2,
+  },
+  emoji: { fontSize: 16 },
+  moodScore: { fontSize: 9 },
   duration: { fontSize: 9 },
-  placeholder: { height: 28 },
+  placeholder: { height: 36 },
 });

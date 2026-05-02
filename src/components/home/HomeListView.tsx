@@ -55,23 +55,38 @@ function RecordRow({ record }: { record: DailyRecordWithIntervals }) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${dateLabel} の記録を編集`}
-        style={[styles.row, { backgroundColor: colors.bgSecondary }]}
+        style={[styles.pressable, { backgroundColor: colors.bgSecondary }]}
       >
-        <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
-        <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
-        <View style={styles.rowMeta}>
-          <Text style={[styles.rowTags, { color: colors.textPrimary }]} numberOfLines={1}>
-            {record.moodTags.length > 0 ? `${tagsPreview}${moreTags}` : '-'}
+        <View style={styles.row}>
+          <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
+          <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
+          <Text style={[styles.rowMoodScore, { color: colors.textSecondary }]}>
+            {formatMoodScore(record.moodScore)}
           </Text>
-          {record.memo && (
-            <Text style={[styles.rowMemo, { color: colors.textSecondary }]} numberOfLines={1}>
-              {record.memo}
-            </Text>
-          )}
+          <Text
+            style={[styles.rowMeta, { color: colors.textPrimary }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {formatMeta(record.moodTags.length > 0 ? `${tagsPreview}${moreTags}` : '', record.memo)}
+          </Text>
         </View>
       </Pressable>
     </Link>
   );
+}
+
+function formatMoodScore(score: number): string {
+  if (score > 0) return `+${score}`;
+  return `${score}`;
+}
+
+function formatMeta(tagsText: string, memo: string | null): string {
+  const parts: string[] = [];
+  if (tagsText) parts.push(tagsText);
+  if (memo) parts.push(memo);
+  if (parts.length === 0) return '-';
+  return parts.join(' ・ ');
 }
 
 function formatRowDate(iso: string): string {
@@ -90,17 +105,18 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   emptySubtitle: { fontSize: 13, textAlign: 'center' },
   listContent: { padding: 16 },
+  pressable: {
+    borderRadius: 8,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 8,
-    gap: 12,
+    gap: 8,
   },
   rowDate: { fontSize: 14, fontWeight: '600', minWidth: 92 },
   rowEmoji: { fontSize: 24 },
-  rowMeta: { flex: 1, gap: 2 },
-  rowTags: { fontSize: 13 },
-  rowMemo: { fontSize: 12 },
+  rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left' },
+  rowMeta: { flex: 1, fontSize: 13 },
   separator: { height: 8 },
 });
