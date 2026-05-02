@@ -102,6 +102,41 @@ export async function deleteById(id: string): Promise<void> {
   await db.delete(dailyRecord).where(eq(dailyRecord.id, id));
 }
 
+/**
+ * 既存記録をすべて削除し、入力で完全に置き換える（CSV インポート用）。
+ * トランザクション内で実行されるため、失敗時はロールバックされる。
+ */
+export async function replaceAll(inputs: readonly SaveRecordInput[]): Promise<void> {
+  const now = new Date();
+  await db.transaction(async (tx) => {
+    // CASCADE で sleep_interval も削除される
+    await tx.delete(dailyRecord);
+
+    for (const input of inputs) {
+      const recordId = newId();
+      await tx.insert(dailyRecord).values({
+        id: recordId,
+        date: input.date,
+        moodScore: input.moodScore,
+        moodTags: serializeMoodTags(input.moodTags),
+        memo: input.memo,
+        createdAt: now,
+        updatedAt: now,
+      });
+      if (input.intervals.length > 0) {
+        await tx.insert(sleepInterval).values(
+          input.intervals.map((iv) => ({
+            id: newId(),
+            recordId,
+            startAt: iv.startAt,
+            endAt: iv.endAt,
+          })),
+        );
+      }
+    }
+  });
+}
+
 interface RawDailyRecord {
   id: string;
   date: string;
