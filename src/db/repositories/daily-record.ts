@@ -4,6 +4,12 @@ import { db } from '../client';
 import { dailyRecord, sleepInterval } from '../schema';
 import { newId } from '@/lib/id';
 import { logger } from '@/lib/logger';
+import {
+  coercePrnMedication,
+  coerceSleepAid,
+  type PrnMedication,
+  type SleepAid,
+} from '@/domain/medication';
 import { isMoodScore, type MoodScore } from '@/domain/mood';
 import { parseMoodTags, serializeMoodTags } from '@/domain/record-serialization';
 
@@ -13,6 +19,10 @@ export interface DailyRecordWithIntervals {
   moodScore: MoodScore;
   moodTags: string[];
   memo: string | null;
+  /** v1.2: 睡眠導入剤。null = 「なし」 */
+  sleepAid: SleepAid;
+  /** v1.2: 頓服薬。null = 「なし」 */
+  prnMedication: PrnMedication;
   intervals: { id: string; startAt: Date; endAt: Date }[];
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +33,8 @@ export interface SaveRecordInput {
   moodScore: MoodScore;
   moodTags: readonly string[];
   memo: string | null;
+  sleepAid: SleepAid;
+  prnMedication: PrnMedication;
   intervals: readonly { startAt: Date; endAt: Date }[];
 }
 
@@ -66,6 +78,8 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
           moodScore: input.moodScore,
           moodTags: serializeMoodTags(input.moodTags),
           memo: input.memo,
+          sleepAid: input.sleepAid,
+          prnMedication: input.prnMedication,
           updatedAt: now,
         })
         .where(eq(dailyRecord.id, recordId));
@@ -79,6 +93,8 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
         moodScore: input.moodScore,
         moodTags: serializeMoodTags(input.moodTags),
         memo: input.memo,
+        sleepAid: input.sleepAid,
+        prnMedication: input.prnMedication,
         createdAt: now,
         updatedAt: now,
       });
@@ -120,6 +136,8 @@ export async function replaceAll(inputs: readonly SaveRecordInput[]): Promise<vo
         moodScore: input.moodScore,
         moodTags: serializeMoodTags(input.moodTags),
         memo: input.memo,
+        sleepAid: input.sleepAid,
+        prnMedication: input.prnMedication,
         createdAt: now,
         updatedAt: now,
       });
@@ -143,6 +161,8 @@ interface RawDailyRecord {
   moodScore: number;
   moodTags: string;
   memo: string | null;
+  sleepAid: string | null;
+  prnMedication: string | null;
   createdAt: Date;
   updatedAt: Date;
   intervals: { id: string; recordId: string; startAt: Date; endAt: Date }[];
@@ -167,6 +187,8 @@ function toDomain(raw: RawDailyRecord): DailyRecordWithIntervals {
     moodScore,
     moodTags: parseMoodTags(raw.moodTags),
     memo: raw.memo,
+    sleepAid: coerceSleepAid(raw.sleepAid),
+    prnMedication: coercePrnMedication(raw.prnMedication),
     intervals: raw.intervals.map((iv) => ({
       id: iv.id,
       startAt: iv.startAt,

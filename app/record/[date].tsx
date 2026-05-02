@@ -95,6 +95,8 @@ export default function RecordScreen() {
         moodScore: parsed.data.moodScore,
         moodTags: parsed.data.moodTags,
         memo: parsed.data.memo,
+        sleepAid: null,
+        prnMedication: null,
         intervals: intervals.map((iv) => toDbInterval(isoDate, iv)),
       });
       router.back();

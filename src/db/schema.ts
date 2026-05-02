@@ -9,6 +9,9 @@ export const dailyRecord = sqliteTable(
     moodScore: integer('mood_score').notNull(),
     moodTags: text('mood_tags').notNull(),
     memo: text('memo'),
+    // v1.2 追加: 服薬記録（要件 §FR-1.6）。null = 「なし」
+    sleepAid: text('sleep_aid'),
+    prnMedication: text('prn_medication'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
   },

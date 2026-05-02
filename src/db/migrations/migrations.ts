@@ -4,7 +4,9 @@
 // 新しいマイグレーションを drizzle-kit generate で生成したら、
 // このファイルにエントリを追加すること。
 //
-// Source: ./0000_tense_carlie_cooper.sql / ./meta/_journal.json
+// Source:
+//   - ./0000_tense_carlie_cooper.sql / ./meta/_journal.json
+//   - ./0001_melodic_screwball.sql (v1.2 服薬記録カラム追加)
 
 import journal from './meta/_journal.json';
 
@@ -36,10 +38,15 @@ CREATE TABLE \`sleep_interval\` (
 CREATE INDEX \`idx_sleep_interval_record\` ON \`sleep_interval\` (\`record_id\`);--> statement-breakpoint
 CREATE INDEX \`idx_sleep_interval_start\` ON \`sleep_interval\` (\`start_at\`);`;
 
+const m0001 = `ALTER TABLE \`daily_record\` ADD \`sleep_aid\` text;
+--> statement-breakpoint
+ALTER TABLE \`daily_record\` ADD \`prn_medication\` text;`;
+
 const migrations = {
   journal,
   migrations: {
     m0000,
+    m0001,
   },
 };
 
