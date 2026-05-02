@@ -1,9 +1,11 @@
+import { Fragment } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
 
 import { type DailyRecordWithIntervals } from '@/db/repositories/daily-record';
 import { MOOD_EMOJI } from '@/domain/mood';
 import { fromIsoDate, todayIso, yesterdayIso } from '@/lib/date';
+import { splitWithHighlight } from '@/lib/highlight';
 import { useTheme } from '@/theme/useTheme';
 
 interface HomeListViewProps {
@@ -11,9 +13,19 @@ interface HomeListViewProps {
   loading: boolean;
   /** 検索/絞り込みを適用中。空状態メッセージを切替えるのに使う。 */
   isFiltering?: boolean;
+  /** メモ本文中のキーワードハイライトに使用。 */
+  keyword?: string;
+  /** タグの絞り込みで選択中のタグ。リスト中で赤太字ハイライト。 */
+  selectedTags?: readonly string[];
 }
 
-export function HomeListView({ records, loading, isFiltering }: HomeListViewProps) {
+export function HomeListView({
+  records,
+  loading,
+  isFiltering,
+  keyword = '',
+  selectedTags = [],
+}: HomeListViewProps) {
   const { colors } = useTheme();
   if (records.length === 0) {
     const title = isFiltering ? '該当する記録がありません' : 'まだ記録がありません';
@@ -35,17 +47,25 @@ export function HomeListView({ records, loading, isFiltering }: HomeListViewProp
       data={records}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.listContent}
-      renderItem={({ item }) => <RecordRow record={item} />}
+      renderItem={({ item }) => (
+        <RecordRow record={item} keyword={keyword} selectedTags={selectedTags} />
+      )}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
     />
   );
 }
 
-function RecordRow({ record }: { record: DailyRecordWithIntervals }) {
+interface RecordRowProps {
+  record: DailyRecordWithIntervals;
+  keyword: string;
+  selectedTags: readonly string[];
+}
+
+function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
   const { colors } = useTheme();
-  const tagsPreview = record.moodTags.slice(0, 3).join('、');
-  const moreTags = record.moodTags.length > 3 ? ` +${record.moodTags.length - 3}` : '';
   const dateLabel = formatRowDate(record.date);
+  const visibleTags = record.moodTags.slice(0, 3);
+  const moreTags = record.moodTags.length > 3 ? ` +${record.moodTags.length - 3}` : '';
 
   return (
     <Link
@@ -57,19 +77,45 @@ function RecordRow({ record }: { record: DailyRecordWithIntervals }) {
         accessibilityLabel={`${dateLabel} の記録を編集`}
         style={[styles.pressable, { backgroundColor: colors.bgSecondary }]}
       >
-        <View style={styles.row}>
-          <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
-          <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
-          <Text style={[styles.rowMoodScore, { color: colors.textSecondary }]}>
-            {formatMoodScore(record.moodScore)}
-          </Text>
-          <Text
-            style={[styles.rowMeta, { color: colors.textPrimary }]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {formatMeta(record.moodTags.length > 0 ? `${tagsPreview}${moreTags}` : '', record.memo)}
-          </Text>
+        <View style={styles.cell}>
+          <View style={styles.headerLine}>
+            <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
+            <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
+            <Text style={[styles.rowMoodScore, { color: colors.textSecondary }]}>
+              {formatMoodScore(record.moodScore)}
+            </Text>
+          </View>
+          {record.moodTags.length > 0 && (
+            <Text
+              style={[styles.tagsLine, { color: colors.textPrimary }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {visibleTags.map((tag, idx) => {
+                const selected = selectedTags.includes(tag);
+                return (
+                  <Fragment key={`${tag}-${idx}`}>
+                    {idx > 0 && <Text>、</Text>}
+                    <Text style={selected ? styles.tagHighlight : undefined}>{tag}</Text>
+                  </Fragment>
+                );
+              })}
+              {moreTags}
+            </Text>
+          )}
+          {record.memo && (
+            <Text
+              style={[styles.memoLine, { color: colors.textSecondary }]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {splitWithHighlight(record.memo, keyword).map((seg, idx) => (
+                <Text key={idx} style={seg.match ? styles.memoHighlight : undefined}>
+                  {seg.text}
+                </Text>
+              ))}
+            </Text>
+          )}
         </View>
       </Pressable>
     </Link>
@@ -79,14 +125,6 @@ function RecordRow({ record }: { record: DailyRecordWithIntervals }) {
 function formatMoodScore(score: number): string {
   if (score > 0) return `+${score}`;
   return `${score}`;
-}
-
-function formatMeta(tagsText: string, memo: string | null): string {
-  const parts: string[] = [];
-  if (tagsText) parts.push(tagsText);
-  if (memo) parts.push(memo);
-  if (parts.length === 0) return '-';
-  return parts.join(' ・ ');
 }
 
 function formatRowDate(iso: string): string {
@@ -100,6 +138,9 @@ function formatRowDate(iso: string): string {
   return dayLabel;
 }
 
+/** ハイライト色（赤）。テーマトークン外の固有値として定義。 */
+const HIGHLIGHT_COLOR = '#E53935';
+
 const styles = StyleSheet.create({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   emptyTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
@@ -108,15 +149,21 @@ const styles = StyleSheet.create({
   pressable: {
     borderRadius: 8,
   },
-  row: {
+  cell: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  headerLine: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
     gap: 8,
   },
-  rowDate: { fontSize: 14, fontWeight: '600', minWidth: 92 },
-  rowEmoji: { fontSize: 24 },
-  rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left' },
-  rowMeta: { flex: 1, fontSize: 13 },
-  separator: { height: 8 },
+  rowDate: { fontSize: 14, fontWeight: '600', minWidth: 92, lineHeight: 18 },
+  rowEmoji: { fontSize: 22, lineHeight: 26 },
+  rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left', lineHeight: 18 },
+  tagsLine: { fontSize: 13, lineHeight: 16 },
+  memoLine: { fontSize: 12, lineHeight: 15 },
+  tagHighlight: { color: HIGHLIGHT_COLOR, fontWeight: '700' },
+  memoHighlight: { color: HIGHLIGHT_COLOR, fontWeight: '700' },
+  separator: { height: 1 },
 });
