@@ -4,17 +4,24 @@
 
 ## ステータス
 
-**v1.1.0 リリース候補**。v1.0 の機能に加え、以下を実装。
+**v1.1 完了、v1.2（服薬記録）実装中**。
 
-### v1.1 機能
+### v1.2 計画
+- 記録入力画面に「睡眠導入剤」「頓服薬」のラジオボタンを追加
+- CSV エクスポート/インポートにも反映
+
+詳細: [docs/design/17-v1.2-medications.md](docs/design/17-v1.2-medications.md)
+
+### v1.1 機能（実装済み）
 - 感情タグ追加（11 個、合計 41）
 - グラフ Y 軸グリッド + ラベル明示
-- リスト検索（キーワード + タグ）
+- リスト検索（キーワード + タグ、ハイライト表示）
 - CSV インポート（既存データ全削除＋取込）
 - 一覧/カレンダーで気分スコア数値を絵文字の右に併記
+- リスト 3 行レイアウト
 
 過去リリース: [v1.0.0](https://github.com/wednesdaydeveloper/mood-and-sleep-log/releases/tag/v1.0.0)
-詳細: [docs/design/16-v1.1-features.md](docs/design/16-v1.1-features.md)
+v1.1 詳細: [docs/design/16-v1.1-features.md](docs/design/16-v1.1-features.md)
 
 ### v1.0 完了マイルストーン
 - M1 ✅ プロジェクト雛形 + DB + テスト/CI 基盤
@@ -48,6 +55,7 @@
 | [14 オンボーディング](docs/design/14-onboarding.md) | 初回起動チュートリアル |
 | [15 GitHub管理運用](docs/design/15-github-management.md) | リポジトリ・Issue・PR・リリース運用 |
 | [16 v1.1 追加機能](docs/design/16-v1.1-features.md) | タグ追加 / 軸表示 / 検索 / CSVインポートの設計 |
+| [17 v1.2 服薬記録](docs/design/17-v1.2-medications.md) | 睡眠導入剤・頓服薬のラジオボタン追加の設計 |
 
 ## 技術スタック
 
