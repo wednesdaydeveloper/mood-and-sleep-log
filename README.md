@@ -4,11 +4,13 @@
 
 ## ステータス
 
-**v1.1 完了、v1.2（服薬記録）実装中**。
+**v1.2 完了**。
 
-### v1.2 計画
-- 記録入力画面に「睡眠導入剤」「頓服薬」のラジオボタンを追加
-- CSV エクスポート/インポートにも反映
+### v1.2 機能（実装済み）
+- 記録入力画面に「睡眠導入剤」（9 択）と「頓服薬」（4 択）のラジオボタンを追加
+- 既定値はどちらも「なし」
+- DB スキーマに `sleep_aid` / `prn_medication` カラム追加（既存記録は null = 「なし」）
+- CSV エクスポートに 2 列追加。v1.0 / v1.1 で出力した 5 列 CSV のインポートも引き続き可能（後方互換）
 
 詳細: [docs/design/17-v1.2-medications.md](docs/design/17-v1.2-medications.md)
 
@@ -21,6 +23,7 @@
 - リスト 3 行レイアウト
 
 過去リリース: [v1.0.0](https://github.com/wednesdaydeveloper/mood-and-sleep-log/releases/tag/v1.0.0)
+
 v1.1 詳細: [docs/design/16-v1.1-features.md](docs/design/16-v1.1-features.md)
 
 ### v1.0 完了マイルストーン
