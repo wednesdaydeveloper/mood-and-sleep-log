@@ -92,6 +92,17 @@
 - マージ後は **必ず main に同期し直してから次ブランチを切る**
 - **マージ済みブランチはローカル/リモート両方削除**（v1.0 リリース時に古い `feat/m5-line-charts` の再マージで主要修正が巻き戻る事故あり）
 
+## バージョン更新の運用
+
+機能追加で v1.x を切る際の必須手順:
+
+1. `package.json` の `version` を更新
+2. `app.json` の `expo.version` を同じ値に更新
+3. README「ステータス」セクションを更新
+4. main マージ後 `git tag -a vX.Y.Z` + `gh release create`
+
+設定画面のバージョン表示は **`Constants.expoConfig?.version`** から取得（ハードコード禁止、v1.1 で導入）。1〜2 だけで自動反映される。
+
 ## よく使うコマンド
 
 ```bash

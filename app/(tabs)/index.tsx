@@ -93,6 +93,8 @@ export default function HomeScreen() {
             records={filteredRecords}
             loading={loading}
             isFiltering={isFiltering}
+            keyword={keyword}
+            selectedTags={selectedTags}
           />
         ) : (
           <HomeCalendarView records={records} />

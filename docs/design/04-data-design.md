@@ -43,6 +43,8 @@ export const sleepInterval = sqliteTable("sleep_interval", {
   byStart: index("idx_sleep_interval_start").on(t.startAt),
 }));
 
+// v1.1 で機能撤去。テーブル定義は互換性のため残るが
+// アプリから読み書きされない（既存ユーザーのデータ破壊回避）。
 export const draftRecord = sqliteTable("draft_record", {
   date: text("date").primaryKey(),               // ISO yyyy-MM-dd
   payload: text("payload").notNull(),            // JSON {moodScore, moodTags, memo, intervals[]}

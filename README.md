@@ -4,14 +4,16 @@
 
 ## ステータス
 
-**v1.0.0 リリース済み** ([Releases](https://github.com/wednesdaydeveloper/mood-and-sleep-log/releases/tag/v1.0.0))、現在 **v1.1 機能を実装中**。
+**v1.1.0 リリース候補**。v1.0 の機能に加え、以下を実装。
 
-### v1.1 計画
+### v1.1 機能
 - 感情タグ追加（11 個、合計 41）
 - グラフ Y 軸グリッド + ラベル明示
 - リスト検索（キーワード + タグ）
 - CSV インポート（既存データ全削除＋取込）
+- 一覧/カレンダーで気分スコア数値を絵文字の右に併記
 
+過去リリース: [v1.0.0](https://github.com/wednesdaydeveloper/mood-and-sleep-log/releases/tag/v1.0.0)
 詳細: [docs/design/16-v1.1-features.md](docs/design/16-v1.1-features.md)
 
 ### v1.0 完了マイルストーン

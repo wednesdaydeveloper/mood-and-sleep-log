@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import Constants from 'expo-constants';
 
 import { list } from '@/db/repositories/daily-record';
 import type { ParsedCsvRecord } from '@/domain/csv';
@@ -7,6 +8,9 @@ import { applyImport, loadAndParseCsv, pickCsvFile } from '@/lib/import';
 import { shareRecordsAsCsv } from '@/lib/share';
 import { todayIso } from '@/lib/date';
 import { useTheme } from '@/theme/useTheme';
+
+/** app.json の expo.version を起点とする表示用バージョン。 */
+const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
@@ -141,7 +145,7 @@ export default function SettingsScreen() {
       <Section title="アプリについて">
         <View style={styles.infoRow}>
           <Text style={[styles.infoLabel, { color: colors.textPrimary }]}>バージョン</Text>
-          <Text style={[styles.infoValue, { color: colors.textSecondary }]}>0.1.0</Text>
+          <Text style={[styles.infoValue, { color: colors.textSecondary }]}>{APP_VERSION}</Text>
         </View>
       </Section>
     </View>

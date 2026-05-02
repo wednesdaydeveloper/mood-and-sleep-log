@@ -44,6 +44,9 @@ export default function RootLayout() {
           headerTitleStyle: { color: colors.textPrimary },
           headerTintColor: colors.accent,
           contentStyle: { backgroundColor: colors.bgPrimary },
+          // 戻るボタンに前画面の名前（"(tabs)" など）を表示せず、矢印のみにする
+          headerBackTitle: '',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
