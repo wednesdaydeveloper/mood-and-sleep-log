@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  isPrnMedication,
+  isSleepAid,
+  type PrnMedication,
+  type SleepAid,
+} from './medication';
 import { MOOD_SCORES } from './mood';
 import { isValidTagName } from './tags';
 
@@ -17,6 +23,8 @@ export const recordFormSchema = z.object({
       message: '未定義のタグが含まれています',
     }),
   memo: z.string().max(2000, 'メモは 2000 文字以内で入力してください').nullable(),
+  sleepAid: z.custom<SleepAid>(isSleepAid, '不正な睡眠導入剤の値です'),
+  prnMedication: z.custom<PrnMedication>(isPrnMedication, '不正な頓服薬の値です'),
 });
 
 export type RecordFormValues = z.infer<typeof recordFormSchema>;
@@ -25,6 +33,8 @@ export const DEFAULT_FORM_VALUES: RecordFormValues = {
   moodScore: 0,
   moodTags: [],
   memo: null,
+  sleepAid: null,
+  prnMedication: null,
 };
 
 // 念のため: MoodScore 型と zod スキーマの整合を型レベルで担保
