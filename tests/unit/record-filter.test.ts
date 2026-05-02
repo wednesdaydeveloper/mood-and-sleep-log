@@ -12,6 +12,8 @@ function r(
     moodScore: 0,
     moodTags,
     memo,
+    sleepAid: null,
+    prnMedication: null,
     intervals: [],
     createdAt: new Date(date),
     updatedAt: new Date(date),

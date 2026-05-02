@@ -14,6 +14,8 @@ function makeRecord(
     moodScore,
     moodTags,
     memo,
+    sleepAid: null,
+    prnMedication: null,
     intervals: intervals.map((iv, i) => ({ id: `iv-${i}`, ...iv })),
     createdAt: new Date(date),
     updatedAt: new Date(date),
