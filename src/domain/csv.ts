@@ -1,13 +1,39 @@
 import type { DailyRecordWithIntervals } from '@/db/repositories/daily-record';
+import {
+  coercePrnMedication,
+  coerceSleepAid,
+  type PrnMedication,
+  type SleepAid,
+} from './medication';
 import type { MoodScore } from './mood';
 import { isMoodScore } from './mood';
 import { isValidTagName } from './tags';
 import { toTimelineInterval } from './sleep-mapping';
 import { formatTimelineMinute, TIMELINE_TOTAL_MINUTES } from './sleep';
 import { fromIsoDate } from '@/lib/date';
+import { logger } from '@/lib/logger';
 
-const HEADER_COLUMNS = ['date', 'moodScore', 'moodTags', 'memo', 'sleepIntervals'] as const;
+/** v1.2 以降の正規ヘッダー（7 列）。 */
+const HEADER_COLUMNS = [
+  'date',
+  'moodScore',
+  'moodTags',
+  'memo',
+  'sleepIntervals',
+  'sleepAid',
+  'prnMedication',
+] as const;
 const HEADER = HEADER_COLUMNS.join(',');
+
+/** v1.0 / v1.1 で出力された旧ヘッダー（5 列）。インポート時のみ受け付ける。 */
+const LEGACY_HEADER_COLUMNS = [
+  'date',
+  'moodScore',
+  'moodTags',
+  'memo',
+  'sleepIntervals',
+] as const;
+
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RANGE_PATTERN = /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/;
 const BOM = '﻿';
@@ -42,6 +68,8 @@ function rowFor(record: DailyRecordWithIntervals): string {
     quote(record.moodTags.join(',')),
     quote(record.memo ?? ''),
     quote(intervalsField),
+    quote(record.sleepAid ?? ''),
+    quote(record.prnMedication ?? ''),
   ].join(',');
 }
 
@@ -67,6 +95,10 @@ export interface ParsedCsvRecord {
   moodTags: string[];
   memo: string | null;
   intervals: ParsedCsvInterval[];
+  /** v1.2 追加。旧形式 CSV や未知キーは null。 */
+  sleepAid: SleepAid;
+  /** v1.2 追加。旧形式 CSV や未知キーは null。 */
+  prnMedication: PrnMedication;
 }
 
 export interface CsvParseError {
@@ -95,10 +127,15 @@ export function parseCsv(content: string): CsvParseResult {
   }
 
   const header = rows[0];
-  if (!header || !isValidHeader(header)) {
+  const headerKind = detectHeaderKind(header);
+  if (headerKind === 'invalid') {
     errors.push({ line: 1, message: 'ヘッダー行が想定形式と異なります' });
     return { records, errors };
   }
+
+  const expectedColumns = headerKind === 'legacy'
+    ? LEGACY_HEADER_COLUMNS.length
+    : HEADER_COLUMNS.length;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
@@ -107,7 +144,7 @@ export function parseCsv(content: string): CsvParseResult {
       // 空行はスキップ
       continue;
     }
-    const parsed = parseRow(row, lineNumber);
+    const parsed = parseRow(row, lineNumber, expectedColumns);
     if ('error' in parsed) {
       errors.push({ line: lineNumber, message: parsed.error });
     } else {
@@ -118,20 +155,35 @@ export function parseCsv(content: string): CsvParseResult {
   return { records, errors };
 }
 
-function isValidHeader(row: readonly string[]): boolean {
-  if (row.length !== HEADER_COLUMNS.length) return false;
-  return HEADER_COLUMNS.every((col, i) => row[i] === col);
+type HeaderKind = 'current' | 'legacy' | 'invalid';
+
+function detectHeaderKind(row: readonly string[] | undefined): HeaderKind {
+  if (!row) return 'invalid';
+  if (
+    row.length === HEADER_COLUMNS.length &&
+    HEADER_COLUMNS.every((col, i) => row[i] === col)
+  ) {
+    return 'current';
+  }
+  if (
+    row.length === LEGACY_HEADER_COLUMNS.length &&
+    LEGACY_HEADER_COLUMNS.every((col, i) => row[i] === col)
+  ) {
+    return 'legacy';
+  }
+  return 'invalid';
 }
 
 function parseRow(
   row: readonly string[],
   lineNumber: number,
+  expectedColumns: number,
 ): { record: ParsedCsvRecord } | { error: string } {
-  if (row.length !== HEADER_COLUMNS.length) {
-    return { error: `列数が ${HEADER_COLUMNS.length} と一致しません（実際: ${row.length}）` };
+  if (row.length !== expectedColumns) {
+    return { error: `列数が ${expectedColumns} と一致しません（実際: ${row.length}）` };
   }
 
-  const [dateStr, moodStr, tagsStr, memoStr, intervalsStr] = row;
+  const [dateStr, moodStr, tagsStr, memoStr, intervalsStr, sleepAidStr, prnStr] = row;
   if (!dateStr || !ISO_DATE_PATTERN.test(dateStr)) {
     return { error: `不正な日付: "${dateStr ?? ''}"` };
   }
@@ -179,7 +231,13 @@ function parseRow(
     }
   }
 
-  void lineNumber;
+  const sleepAid = coerceMedication(sleepAidStr, coerceSleepAid, 'sleepAid', lineNumber);
+  const prnMedication = coerceMedication(
+    prnStr,
+    coercePrnMedication,
+    'prnMedication',
+    lineNumber,
+  );
 
   return {
     record: {
@@ -188,8 +246,33 @@ function parseRow(
       moodTags: validTags,
       memo,
       intervals,
+      sleepAid,
+      prnMedication,
     },
   };
+}
+
+/**
+ * 服薬列を coerce する。空文字・undefined は null。未知キーは null + 警告ログ。
+ * 旧形式 CSV では undefined が渡ってくる（列自体が存在しない）。
+ */
+function coerceMedication<T>(
+  raw: string | undefined,
+  coerce: (v: unknown) => T,
+  field: 'sleepAid' | 'prnMedication',
+  line: number,
+): T {
+  if (raw === undefined || raw === '') {
+    return coerce(null);
+  }
+  const result = coerce(raw);
+  if (result === null && raw !== '') {
+    logger.warn('csv', `unknown ${field} value, fell back to null`, {
+      line,
+      raw,
+    });
+  }
+  return result;
 }
 
 /**
