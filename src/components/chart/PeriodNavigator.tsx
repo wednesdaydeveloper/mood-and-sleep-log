@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type ChartPeriod } from '@/domain/chart-aggregation';
-import { fromIsoDate, todayIso } from '@/lib/date';
+import { formatPeriodRange } from '@/domain/chart-period-format';
+import { todayIso } from '@/lib/date';
 import { useTheme } from '@/theme/useTheme';
 
 interface PeriodNavigatorProps {
@@ -11,8 +12,6 @@ interface PeriodNavigatorProps {
   onPrev: () => void;
   onNext: () => void;
 }
-
-const days = ['日', '月', '火', '水', '木', '金', '土'];
 
 export function PeriodNavigator({
   period,
@@ -32,7 +31,7 @@ export function PeriodNavigator({
     >
       <ArrowButton label="◀" accessibilityLabel="前の期間" onPress={onPrev} />
       <Text style={[styles.label, { color: colors.textPrimary }]}>
-        {formatRange(period, startIso, endIso)}
+        {formatPeriodRange(period, startIso, endIso)}
       </Text>
       <ArrowButton
         label="▶"
@@ -72,17 +71,6 @@ function ArrowButton({ label, accessibilityLabel, onPress, disabled }: ArrowButt
       </Text>
     </Pressable>
   );
-}
-
-function formatRange(period: ChartPeriod, startIso: string, endIso: string): string {
-  const start = fromIsoDate(startIso);
-  const end = fromIsoDate(endIso);
-  if (period === 'year') {
-    return `${start.getFullYear()}/${start.getMonth() + 1} 〜 ${end.getFullYear()}/${end.getMonth() + 1}`;
-  }
-  const startLabel = `${start.getMonth() + 1}/${start.getDate()}(${days[start.getDay()]})`;
-  const endLabel = `${end.getMonth() + 1}/${end.getDate()}(${days[end.getDay()]})`;
-  return `${startLabel} 〜 ${endLabel}`;
 }
 
 const styles = StyleSheet.create({
