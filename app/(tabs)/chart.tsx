@@ -159,9 +159,11 @@ export default function ChartScreen() {
               <SleepDurationChart points={points} height={140} period={period} />
             </Section>
 
-            <Section title="睡眠時間帯">
-              <SleepTimeRangeChart points={points} height={240} />
-            </Section>
+            {period !== 'year' && (
+              <Section title="睡眠時間帯">
+                <SleepTimeRangeChart points={points} height={240} />
+              </Section>
+            )}
 
             <ChartXAxis points={points} period={period} />
 
