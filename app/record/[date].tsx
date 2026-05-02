@@ -14,10 +14,15 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { useHeaderHeight } from '@react-navigation/elements';
 
+import { MedicationRadio } from '@/components/medication/MedicationRadio';
 import { MoodPicker } from '@/components/mood/MoodPicker';
 import { SleepTimeline } from '@/components/sleep-timeline/SleepTimeline';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { findByDate, upsert } from '@/db/repositories/daily-record';
+import {
+  PRN_MEDICATION_OPTIONS,
+  SLEEP_AID_OPTIONS,
+} from '@/domain/medication';
 import { DEFAULT_FORM_VALUES, type RecordFormValues, recordFormSchema } from '@/domain/record-form';
 import { type SleepInterval } from '@/domain/sleep';
 import { toDbInterval, toTimelineInterval } from '@/domain/sleep-mapping';
@@ -61,6 +66,8 @@ export default function RecordScreen() {
             moodScore: existing.moodScore,
             moodTags: existing.moodTags,
             memo: existing.memo,
+            sleepAid: existing.sleepAid,
+            prnMedication: existing.prnMedication,
           });
           setIntervals(existing.intervals.map((iv) => toTimelineInterval(isoDate, iv)));
         }
@@ -95,8 +102,8 @@ export default function RecordScreen() {
         moodScore: parsed.data.moodScore,
         moodTags: parsed.data.moodTags,
         memo: parsed.data.memo,
-        sleepAid: null,
-        prnMedication: null,
+        sleepAid: parsed.data.sleepAid,
+        prnMedication: parsed.data.prnMedication,
         intervals: intervals.map((iv) => toDbInterval(isoDate, iv)),
       });
       router.back();
@@ -217,6 +224,36 @@ export default function RecordScreen() {
                 {errors.memo.message}
               </Text>
             )}
+          </Section>
+
+          <Section title="💊 睡眠導入剤">
+            <Controller
+              control={control}
+              name="sleepAid"
+              render={({ field }) => (
+                <MedicationRadio
+                  groupLabel="睡眠導入剤"
+                  options={SLEEP_AID_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+          </Section>
+
+          <Section title="💊 頓服薬">
+            <Controller
+              control={control}
+              name="prnMedication"
+              render={({ field }) => (
+                <MedicationRadio
+                  groupLabel="頓服薬"
+                  options={PRN_MEDICATION_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </Section>
         </ScrollView>
       </KeyboardAvoidingView>
