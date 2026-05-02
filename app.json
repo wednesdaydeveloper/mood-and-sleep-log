@@ -3,7 +3,7 @@
     "name": "気分・睡眠ログ",
     "slug": "mood-and-sleep-log",
     "scheme": "moodsleep",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
