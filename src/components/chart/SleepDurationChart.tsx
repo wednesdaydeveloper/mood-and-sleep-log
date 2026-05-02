@@ -1,16 +1,11 @@
-import { Platform, StyleSheet, View } from 'react-native';
-import { matchFont } from '@shopify/react-native-skia';
+import { StyleSheet, View } from 'react-native';
 import { CartesianChart, Line, Scatter } from 'victory-native';
 
 import { type ChartPeriod, type ChartPoint } from '@/domain/chart-aggregation';
 import { useTheme } from '@/theme/useTheme';
 
+import { chartAxisFont } from './chart-fonts';
 import { computeXTickIndices } from './chart-x-ticks';
-
-const axisFont = matchFont({
-  fontFamily: Platform.select({ ios: 'Helvetica', default: 'sans-serif' }),
-  fontSize: 11,
-});
 
 interface SleepDurationChartProps {
   points: readonly ChartPoint[];
@@ -45,7 +40,7 @@ export function SleepDurationChart({ points, height, period }: SleepDurationChar
         domain={{ y: [min, max] }}
         domainPadding={{ left: 12, right: 12, top: 8, bottom: 8 }}
         axisOptions={{
-          font: axisFont,
+          font: chartAxisFont,
           tickValues: { x: xTicks, y: yTicks },
           labelOffset: { x: 4, y: 6 },
           labelColor: colors.textPrimary,
