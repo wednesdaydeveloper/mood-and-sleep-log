@@ -7,11 +7,18 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A6BE5"
+    },
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.wednesdaydeveloper.moodandsleeplog",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "アプリのデータ保護のため、生体認証を使用します（将来機能）。"
+        "NSFaceIDUsageDescription": "アプリのデータ保護のため、生体認証を使用します（将来機能）。",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

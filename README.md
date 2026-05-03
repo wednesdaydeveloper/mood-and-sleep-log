@@ -85,6 +85,16 @@ Expo Go アプリ（iOS/Android）または iOS Simulator / Android Emulator で
 
 過去に Excel で記録していた気分・睡眠データを CSV インポート形式に変換する一回限りのスクリプト: [convert/README.md](convert/README.md)
 
+## 配布（TestFlight）
+
+App Store には公開せず、TestFlight Internal Testing で自分・家族の Apple ID にだけ配布する運用。
+セットアップ・更新手順: [docs/runbooks/testflight-setup.md](docs/runbooks/testflight-setup.md)
+
+```powershell
+npm run build:ios   # クラウドビルド
+npm run submit:ios  # App Store Connect にアップロード → TestFlight 自動通知
+```
+
 ## ライセンス
 
 Private（自分専用、公開予定なし）。
