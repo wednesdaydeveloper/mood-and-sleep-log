@@ -200,7 +200,7 @@ export default function RecordScreen() {
             />
           </Section>
 
-          <Section title="📅 イベント（任意）">
+          <Section title="✨ イベント（任意）">
             <Controller
               control={control}
               name="event"
