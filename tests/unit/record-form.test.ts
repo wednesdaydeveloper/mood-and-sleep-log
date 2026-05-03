@@ -7,6 +7,7 @@ describe('recordFormSchema', () => {
     memo: null,
     sleepAid: null,
     prnMedication: null,
+    event: null,
   };
 
   it('accepts default values', () => {
@@ -76,10 +77,42 @@ describe('recordFormSchema', () => {
     });
   });
 
+  describe('event', () => {
+    it('accepts null', () => {
+      const result = recordFormSchema.safeParse({ ...baseValues, event: null });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts a short string', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        event: '梅田でショッピング',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts exactly 200 chars', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        event: 'a'.repeat(200),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects 201 chars', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        event: 'a'.repeat(201),
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('DEFAULT_FORM_VALUES', () => {
-    it('initializes both medications as null (= なし)', () => {
+    it('initializes optional fields as null', () => {
       expect(DEFAULT_FORM_VALUES.sleepAid).toBeNull();
       expect(DEFAULT_FORM_VALUES.prnMedication).toBeNull();
+      expect(DEFAULT_FORM_VALUES.event).toBeNull();
     });
   });
 });

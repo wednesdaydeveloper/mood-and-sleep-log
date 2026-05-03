@@ -47,6 +47,11 @@ export function DataPointPopup({ point, ratio, containerWidth }: DataPointPopupP
             .join(', ')}
         </Text>
       )}
+      {point.event && (
+        <Text style={[styles.line, { color: colors.popupText }]} numberOfLines={2}>
+          イベント: {point.event}
+        </Text>
+      )}
     </View>
   );
 }

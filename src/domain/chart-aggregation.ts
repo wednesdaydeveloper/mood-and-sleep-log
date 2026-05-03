@@ -28,6 +28,8 @@ export interface ChartPoint {
   sleepMinutes: number | null;
   /** 縦帯グラフ用の睡眠区間（21:00 起点の分）。データなしは空配列。 */
   intervals: ChartIntervalRange[];
+  /** v1.3: イベント。week/month のみ設定（year は集約のため null）。データなしも null。 */
+  event: string | null;
 }
 
 interface RawByDate {
@@ -97,7 +99,7 @@ function pad2(n: number): string {
 function buildYearPoint(monthIso: string, group: readonly DailyRecordWithIntervals[]): ChartPoint {
   const label = formatMonthLabel(monthIso);
   if (group.length === 0) {
-    return { dateIso: monthIso, label, mood: null, sleepMinutes: null, intervals: [] };
+    return { dateIso: monthIso, label, mood: null, sleepMinutes: null, intervals: [], event: null };
   }
 
   const moodSum = group.reduce((s, r) => s + r.moodScore, 0);
@@ -139,6 +141,8 @@ function buildYearPoint(monthIso: string, group: readonly DailyRecordWithInterva
     mood: round2(meanMood),
     sleepMinutes,
     intervals,
+    // year は集約のため複数日のイベントを 1 つに集約しない（null 固定）
+    event: null,
   };
 }
 
@@ -178,7 +182,14 @@ function mapByDate(
 
 function toRawDayPoint({ iso, record }: RawByDate): ChartPoint {
   if (!record) {
-    return { dateIso: iso, label: shortLabel(iso), mood: null, sleepMinutes: null, intervals: [] };
+    return {
+      dateIso: iso,
+      label: shortLabel(iso),
+      mood: null,
+      sleepMinutes: null,
+      intervals: [],
+      event: null,
+    };
   }
   const intervals = record.intervals.map((iv) => {
     const tl = toTimelineInterval(iso, iv);
@@ -191,6 +202,7 @@ function toRawDayPoint({ iso, record }: RawByDate): ChartPoint {
     mood: record.moodScore as MoodScore,
     sleepMinutes,
     intervals,
+    event: record.event,
   };
 }
 

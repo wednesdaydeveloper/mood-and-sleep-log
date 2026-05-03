@@ -103,6 +103,20 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
               {moreTags}
             </Text>
           )}
+          {record.event && (
+            <Text
+              style={[styles.eventLine, { color: colors.textPrimary }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              📅{' '}
+              {splitWithHighlight(record.event, keyword).map((seg, idx) => (
+                <Text key={idx} style={seg.match ? styles.memoHighlight : undefined}>
+                  {seg.text}
+                </Text>
+              ))}
+            </Text>
+          )}
           {record.memo && (
             <Text
               style={[styles.memoLine, { color: colors.textSecondary }]}
@@ -162,6 +176,7 @@ const styles = StyleSheet.create({
   rowEmoji: { fontSize: 22, lineHeight: 26 },
   rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left', lineHeight: 18 },
   tagsLine: { fontSize: 13, lineHeight: 16 },
+  eventLine: { fontSize: 12, lineHeight: 15 },
   memoLine: { fontSize: 12, lineHeight: 15 },
   tagHighlight: { color: HIGHLIGHT_COLOR, fontWeight: '700' },
   memoHighlight: { color: HIGHLIGHT_COLOR, fontWeight: '700' },
