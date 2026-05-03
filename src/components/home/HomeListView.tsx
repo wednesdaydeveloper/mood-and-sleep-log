@@ -146,10 +146,10 @@ function formatRowDate(iso: string): string {
   const days = ['日', '月', '火', '水', '木', '金', '土'];
   const today = todayIso();
   const yesterday = yesterdayIso();
-  const dayLabel = `${d.getMonth() + 1}/${d.getDate()}(${days[d.getDay()]})`;
-  if (iso === today) return `今日 ${dayLabel}`;
-  if (iso === yesterday) return `昨日 ${dayLabel}`;
-  return dayLabel;
+  const md = `${d.getMonth() + 1}/${d.getDate()}(${days[d.getDay()]})`;
+  if (iso === today) return `今日 ${md}`;
+  if (iso === yesterday) return `昨日 ${md}`;
+  return `${d.getFullYear()}/${md}`;
 }
 
 /** ハイライト色（赤）。テーマトークン外の固有値として定義。 */
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  rowDate: { fontSize: 14, fontWeight: '600', minWidth: 92, lineHeight: 18 },
+  rowDate: { fontSize: 14, fontWeight: '600', minWidth: 116, lineHeight: 18 },
   rowEmoji: { fontSize: 22, lineHeight: 26 },
   rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left', lineHeight: 18 },
   tagsLine: { fontSize: 13, lineHeight: 16 },

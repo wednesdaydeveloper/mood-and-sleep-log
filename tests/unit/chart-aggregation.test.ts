@@ -33,6 +33,12 @@ describe('aggregateForWeek', () => {
     expect(points[6]?.dateIso).toBe('2026-05-01');
   });
 
+  it('formats label as M/D without year prefix', () => {
+    const points = aggregateForWeek([], '2026-05-01');
+    expect(points[0]?.label).toBe('4/25');
+    expect(points[6]?.label).toBe('5/1');
+  });
+
   it('fills missing days with null mood and empty intervals', () => {
     const points = aggregateForWeek([], '2026-05-01');
     for (const p of points) {
@@ -94,6 +100,11 @@ describe('aggregateForMonth', () => {
     const points = aggregateForMonth(records, '2026-05-01');
     const matched = points.find((p) => p.dateIso === '2026-04-15');
     expect(matched?.mood).toBe(2);
+  });
+
+  it('uses the same label format as week (M/D)', () => {
+    const points = aggregateForMonth([], '2026-05-01');
+    expect(points[29]?.label).toBe('5/1');
   });
 });
 
