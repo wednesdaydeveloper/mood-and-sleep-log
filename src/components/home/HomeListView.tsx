@@ -79,8 +79,8 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
       >
         <View style={styles.cell}>
           <View style={styles.headerLine}>
-            <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
             <Text style={styles.rowDateIcon}>📅</Text>
+            <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
             <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
             <Text style={[styles.rowMoodScore, { color: colors.textSecondary }]}>
               {formatMoodScore(record.moodScore)}
