@@ -80,6 +80,7 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
         <View style={styles.cell}>
           <View style={styles.headerLine}>
             <Text style={[styles.rowDate, { color: colors.textPrimary }]}>{dateLabel}</Text>
+            <Text style={styles.rowDateIcon}>📅</Text>
             <Text style={styles.rowEmoji}>{MOOD_EMOJI[record.moodScore]}</Text>
             <Text style={[styles.rowMoodScore, { color: colors.textSecondary }]}>
               {formatMoodScore(record.moodScore)}
@@ -91,6 +92,7 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
               numberOfLines={1}
               ellipsizeMode="tail"
             >
+              🏷{' '}
               {visibleTags.map((tag, idx) => {
                 const selected = selectedTags.includes(tag);
                 return (
@@ -109,7 +111,7 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              📅{' '}
+              ✨{' '}
               {splitWithHighlight(record.event, keyword).map((seg, idx) => (
                 <Text key={idx} style={seg.match ? styles.memoHighlight : undefined}>
                   {seg.text}
@@ -123,6 +125,7 @@ function RecordRow({ record, keyword, selectedTags }: RecordRowProps) {
               numberOfLines={2}
               ellipsizeMode="tail"
             >
+              📝{' '}
               {splitWithHighlight(record.memo, keyword).map((seg, idx) => (
                 <Text key={idx} style={seg.match ? styles.memoHighlight : undefined}>
                   {seg.text}
@@ -173,6 +176,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rowDate: { fontSize: 14, fontWeight: '600', minWidth: 116, lineHeight: 18 },
+  rowDateIcon: { fontSize: 14, lineHeight: 18 },
   rowEmoji: { fontSize: 22, lineHeight: 26 },
   rowMoodScore: { fontSize: 12, minWidth: 22, textAlign: 'left', lineHeight: 18 },
   tagsLine: { fontSize: 13, lineHeight: 16 },
