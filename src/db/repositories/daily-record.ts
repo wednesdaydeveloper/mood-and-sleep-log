@@ -23,6 +23,8 @@ export interface DailyRecordWithIntervals {
   sleepAid: SleepAid;
   /** v1.2: 頓服薬。null = 「なし」 */
   prnMedication: PrnMedication;
+  /** v1.3: イベント（外出先・予定など、200 文字以内の任意短文）。null = 未入力 */
+  event: string | null;
   intervals: { id: string; startAt: Date; endAt: Date }[];
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +37,7 @@ export interface SaveRecordInput {
   memo: string | null;
   sleepAid: SleepAid;
   prnMedication: PrnMedication;
+  event: string | null;
   intervals: readonly { startAt: Date; endAt: Date }[];
 }
 
@@ -80,6 +83,7 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
           memo: input.memo,
           sleepAid: input.sleepAid,
           prnMedication: input.prnMedication,
+          event: input.event,
           updatedAt: now,
         })
         .where(eq(dailyRecord.id, recordId));
@@ -95,6 +99,7 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
         memo: input.memo,
         sleepAid: input.sleepAid,
         prnMedication: input.prnMedication,
+        event: input.event,
         createdAt: now,
         updatedAt: now,
       });
@@ -138,6 +143,7 @@ export async function replaceAll(inputs: readonly SaveRecordInput[]): Promise<vo
         memo: input.memo,
         sleepAid: input.sleepAid,
         prnMedication: input.prnMedication,
+        event: input.event,
         createdAt: now,
         updatedAt: now,
       });
@@ -163,6 +169,7 @@ interface RawDailyRecord {
   memo: string | null;
   sleepAid: string | null;
   prnMedication: string | null;
+  event: string | null;
   createdAt: Date;
   updatedAt: Date;
   intervals: { id: string; recordId: string; startAt: Date; endAt: Date }[];
@@ -189,6 +196,7 @@ function toDomain(raw: RawDailyRecord): DailyRecordWithIntervals {
     memo: raw.memo,
     sleepAid: coerceSleepAid(raw.sleepAid),
     prnMedication: coercePrnMedication(raw.prnMedication),
+    event: raw.event,
     intervals: raw.intervals.map((iv) => ({
       id: iv.id,
       startAt: iv.startAt,

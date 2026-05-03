@@ -25,6 +25,7 @@ export const recordFormSchema = z.object({
   memo: z.string().max(2000, 'メモは 2000 文字以内で入力してください').nullable(),
   sleepAid: z.custom<SleepAid>(isSleepAid, '不正な睡眠導入剤の値です'),
   prnMedication: z.custom<PrnMedication>(isPrnMedication, '不正な頓服薬の値です'),
+  event: z.string().max(200, 'イベントは 200 文字以内で入力してください').nullable(),
 });
 
 export type RecordFormValues = z.infer<typeof recordFormSchema>;
@@ -35,6 +36,7 @@ export const DEFAULT_FORM_VALUES: RecordFormValues = {
   memo: null,
   sleepAid: null,
   prnMedication: null,
+  event: null,
 };
 
 // 念のため: MoodScore 型と zod スキーマの整合を型レベルで担保

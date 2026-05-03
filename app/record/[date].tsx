@@ -68,6 +68,7 @@ export default function RecordScreen() {
             memo: existing.memo,
             sleepAid: existing.sleepAid,
             prnMedication: existing.prnMedication,
+            event: existing.event,
           });
           setIntervals(existing.intervals.map((iv) => toTimelineInterval(isoDate, iv)));
         }
@@ -104,6 +105,7 @@ export default function RecordScreen() {
         memo: parsed.data.memo,
         sleepAid: parsed.data.sleepAid,
         prnMedication: parsed.data.prnMedication,
+        event: parsed.data.event,
         intervals: intervals.map((iv) => toDbInterval(isoDate, iv)),
       });
       router.back();
@@ -196,6 +198,35 @@ export default function RecordScreen() {
             />
           </Section>
 
+          <Section title="📅 イベント（任意）">
+            <Controller
+              control={control}
+              name="event"
+              render={({ field }) => (
+                <TextInput
+                  style={[
+                    styles.eventInput,
+                    {
+                      backgroundColor: colors.bgSecondary,
+                      borderColor: colors.border,
+                      color: colors.textPrimary,
+                    },
+                  ]}
+                  placeholder="梅田でショッピング"
+                  placeholderTextColor={colors.textDisabled}
+                  maxLength={200}
+                  value={field.value ?? ''}
+                  onChangeText={(text) => field.onChange(text === '' ? null : text)}
+                />
+              )}
+            />
+            {errors.event && (
+              <Text style={[styles.errorText, { color: colors.danger }]}>
+                {errors.event.message}
+              </Text>
+            )}
+          </Section>
+
           <Section title="📝 メモ（任意）">
             <Controller
               control={control}
@@ -286,6 +317,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontWeight: '600' },
   memoInput: {
     minHeight: 100,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+  },
+  eventInput: {
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,

@@ -5,6 +5,7 @@ function r(
   date: string,
   moodTags: string[] = [],
   memo: string | null = null,
+  event: string | null = null,
 ): DailyRecordWithIntervals {
   return {
     id: `id-${date}`,
@@ -14,6 +15,7 @@ function r(
     memo,
     sleepAid: null,
     prnMedication: null,
+    event,
     intervals: [],
     createdAt: new Date(date),
     updatedAt: new Date(date),
@@ -57,6 +59,21 @@ describe('matches', () => {
     it('returns false when memo is null and tag does not match', () => {
       const rec = r('2026-04-30', ['不安']);
       expect(matches(rec, { keyword: '楽しい', selectedTags: [] })).toBe(false);
+    });
+
+    it('matches event substring', () => {
+      const rec = r('2026-04-30', [], null, '梅田でショッピング');
+      expect(matches(rec, { keyword: '梅田', selectedTags: [] })).toBe(true);
+    });
+
+    it('matches event case-insensitively', () => {
+      const rec = r('2026-04-30', [], null, 'Coffee Date');
+      expect(matches(rec, { keyword: 'coffee', selectedTags: [] })).toBe(true);
+    });
+
+    it('returns false when keyword matches neither memo, tags, nor event', () => {
+      const rec = r('2026-04-30', ['不安'], 'メモ内容', '美容院');
+      expect(matches(rec, { keyword: 'XYZ', selectedTags: [] })).toBe(false);
     });
   });
 

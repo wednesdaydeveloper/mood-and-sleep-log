@@ -7,6 +7,7 @@
 // Source:
 //   - ./0000_tense_carlie_cooper.sql / ./meta/_journal.json
 //   - ./0001_melodic_screwball.sql (v1.2 服薬記録カラム追加)
+//   - ./0002_eager_dragon_lord.sql (v1.3 イベントカラム追加)
 
 import journal from './meta/_journal.json';
 
@@ -42,11 +43,14 @@ const m0001 = `ALTER TABLE \`daily_record\` ADD \`sleep_aid\` text;
 --> statement-breakpoint
 ALTER TABLE \`daily_record\` ADD \`prn_medication\` text;`;
 
+const m0002 = `ALTER TABLE \`daily_record\` ADD \`event\` text;`;
+
 const migrations = {
   journal,
   migrations: {
     m0000,
     m0001,
+    m0002,
   },
 };
 

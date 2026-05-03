@@ -12,6 +12,8 @@ export const dailyRecord = sqliteTable(
     // v1.2 追加: 服薬記録（要件 §FR-1.6）。null = 「なし」
     sleepAid: text('sleep_aid'),
     prnMedication: text('prn_medication'),
+    // v1.3 追加: イベント（任意の短文、外出先・予定など）。null = 未入力
+    event: text('event'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
   },

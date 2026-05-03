@@ -27,8 +27,8 @@ SLEEP_FILL_RGB = "FFFF0000"
 # 「空のシート」と、構造の異なるシートはスキップ
 SKIP_SHEETS = {"空のシート", "10"}  # 2025/10 は時間列なしのためスキップ
 
-# CSV 出力時の列順（v1.2）
-CSV_HEADER = "date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication"
+# CSV 出力時の列順（v1.3）
+CSV_HEADER = "date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event"
 
 # UTF-8 BOM
 BOM = "﻿"
@@ -208,18 +208,24 @@ def extract_sleep_intervals(ws, row_idx: int, hour_cols: list[tuple[int, int]]) 
 
 
 # ---------------------------------------------------------------------------
-# memo / event 結合
+# memo / event 抽出
 # ---------------------------------------------------------------------------
 
 
-def build_memo(memo_value: object, event_value: object) -> str:
-    """備考とイベントを結合。イベントがあれば末尾に「（イベント：xxx）」を付加。"""
-    memo = "" if memo_value is None else str(memo_value).strip()
-    event = "" if event_value is None else str(event_value).strip()
-    if event == "":
-        return memo
-    suffix = f"（イベント：{event}）"
-    return memo + suffix if memo else suffix
+def build_memo(memo_value: object) -> str:
+    """備考列の値をそのまま返す（v1.3 以降は event を別カラムに分離するため、
+    memo 末尾に（イベント：xxx）を付加しない）。"""
+    return "" if memo_value is None else str(memo_value).strip()
+
+
+def build_event(event_value: object) -> str:
+    """イベント列の値を 200 文字以内で取得。空欄は空文字。"""
+    if event_value is None:
+        return ""
+    s = str(event_value).strip()
+    if len(s) > 200:
+        s = s[:200]
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +255,15 @@ def quote(value: str) -> str:
     return '"' + value.replace('"', '""') + '"'
 
 
-def format_row(date: str, mood: int, memo: str, intervals: str, sleep_aid: str, prn: str) -> str:
+def format_row(
+    date: str,
+    mood: int,
+    memo: str,
+    intervals: str,
+    sleep_aid: str,
+    prn: str,
+    event: str,
+) -> str:
     return ",".join([
         date,
         str(mood),
@@ -258,6 +272,7 @@ def format_row(date: str, mood: int, memo: str, intervals: str, sleep_aid: str, 
         quote(intervals),
         quote(sleep_aid),
         quote(prn),
+        quote(event),
     ])
 
 
@@ -305,12 +320,13 @@ def process_sheet(ws, year: str, sheet_month: int | None) -> tuple[list[str], in
             return ws.cell(row=row_idx, column=col).value
 
         mood = parse_mood(get("気分"))
-        memo = build_memo(get("備考"), get("イベント"))
+        memo = build_memo(get("備考"))
+        event = build_event(get("イベント"))
         sleep_aid = parse_sleep_aid(get("眠剤"))
         prn = parse_prn(get("頓服"))
         intervals = extract_sleep_intervals(ws, row_idx, hour_cols)
 
-        rows.append(format_row(date, mood, memo, intervals, sleep_aid, prn))
+        rows.append(format_row(date, mood, memo, intervals, sleep_aid, prn, event))
         processed += 1
 
     return rows, processed, empty_skipped, carryover_skipped

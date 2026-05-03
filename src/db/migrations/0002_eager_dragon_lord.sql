@@ -1,0 +1,1 @@
+ALTER TABLE `daily_record` ADD `event` text;
