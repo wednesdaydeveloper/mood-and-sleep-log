@@ -32,6 +32,20 @@ describe('aggregateForWeek', () => {
     expect(points[6]?.dateIso).toBe('2026-05-01');
   });
 
+  it("formats label with apostrophe-prefixed 2-digit year (e.g., \"'26 4/25\")", () => {
+    const points = aggregateForWeek([], '2026-05-01');
+    expect(points[0]?.label).toBe("'26 4/25");
+    expect(points[6]?.label).toBe("'26 5/1");
+  });
+
+  it('shows distinct year prefixes across a year boundary', () => {
+    const points = aggregateForWeek([], '2026-01-02');
+    // 2025-12-27 〜 2026-01-02 の 7 日
+    expect(points[0]?.label).toBe("'25 12/27");
+    expect(points[5]?.label).toBe("'26 1/1");
+    expect(points[6]?.label).toBe("'26 1/2");
+  });
+
   it('fills missing days with null mood and empty intervals', () => {
     const points = aggregateForWeek([], '2026-05-01');
     for (const p of points) {
@@ -93,6 +107,11 @@ describe('aggregateForMonth', () => {
     const points = aggregateForMonth(records, '2026-05-01');
     const matched = points.find((p) => p.dateIso === '2026-04-15');
     expect(matched?.mood).toBe(2);
+  });
+
+  it("uses the same label format as week (e.g., \"'26 4/15\")", () => {
+    const points = aggregateForMonth([], '2026-05-01');
+    expect(points[29]?.label).toBe("'26 5/1");
   });
 });
 
