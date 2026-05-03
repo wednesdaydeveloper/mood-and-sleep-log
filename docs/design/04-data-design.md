@@ -28,6 +28,8 @@ export const dailyRecord = sqliteTable("daily_record", {
   // v1.2 で追加（服薬記録 §FR-1.6）。null = "なし"
   sleepAid: text("sleep_aid"),                   // nullable / 例 'lunesta-0.5'
   prnMedication: text("prn_medication"),         // nullable / 例 'lunesta-1.0'
+  // v1.3 で追加（イベント §FR-1.7）。200 文字以内、null = 未入力
+  event: text("event"),                          // nullable / 例 '梅田でショッピング'
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 }, (t) => ({
@@ -200,6 +202,7 @@ export const draftRepo = {
 | moodScore | INTEGER | -1 |
 | moodTags | quoted | `"不安,疲れ,無力感"` |
 | memo | quoted | `"今日は早めに寝た"` |
+| event | quoted（v1.3 追加） | `"梅田でショッピング"` または `""`（未入力） |
 | sleepIntervals | quoted | `"23:00-02:00,03:30-07:00"` |
 | sleepAid | quoted（v1.2 追加） | `"lunesta-0.5"` または `""`（なし） |
 | prnMedication | quoted（v1.2 追加） | `"lunesta-1.0"` または `""`（なし） |
@@ -207,7 +210,7 @@ export const draftRepo = {
 ### 出力例
 
 ```csv
-date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication
+date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event
 2026-04-25,0,"疲れ","","","",""
 2026-04-26,1,"楽しい,感謝","友人と食事","23:30-07:30","lunesta-0.5",""
 2026-04-29,-1,"不安,鬱","眠りが浅かった","23:00-02:00,03:30-07:00","lunesta-1.0","lunesta-2.0"
