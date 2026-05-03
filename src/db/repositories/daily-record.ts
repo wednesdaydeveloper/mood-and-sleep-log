@@ -25,6 +25,8 @@ export interface DailyRecordWithIntervals {
   prnMedication: PrnMedication;
   /** v1.3: イベント（外出先・予定など、200 文字以内の任意短文）。null = 未入力 */
   event: string | null;
+  /** v1.4: 日記（5000 文字以内の任意長文）。null = 未入力 */
+  diary: string | null;
   intervals: { id: string; startAt: Date; endAt: Date }[];
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +40,7 @@ export interface SaveRecordInput {
   sleepAid: SleepAid;
   prnMedication: PrnMedication;
   event: string | null;
+  diary: string | null;
   intervals: readonly { startAt: Date; endAt: Date }[];
 }
 
@@ -84,6 +87,7 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
           sleepAid: input.sleepAid,
           prnMedication: input.prnMedication,
           event: input.event,
+          diary: input.diary,
           updatedAt: now,
         })
         .where(eq(dailyRecord.id, recordId));
@@ -100,6 +104,7 @@ export async function upsert(input: SaveRecordInput): Promise<void> {
         sleepAid: input.sleepAid,
         prnMedication: input.prnMedication,
         event: input.event,
+        diary: input.diary,
         createdAt: now,
         updatedAt: now,
       });
@@ -144,6 +149,7 @@ export async function replaceAll(inputs: readonly SaveRecordInput[]): Promise<vo
         sleepAid: input.sleepAid,
         prnMedication: input.prnMedication,
         event: input.event,
+        diary: input.diary,
         createdAt: now,
         updatedAt: now,
       });
@@ -170,6 +176,7 @@ interface RawDailyRecord {
   sleepAid: string | null;
   prnMedication: string | null;
   event: string | null;
+  diary: string | null;
   createdAt: Date;
   updatedAt: Date;
   intervals: { id: string; recordId: string; startAt: Date; endAt: Date }[];
@@ -197,6 +204,7 @@ function toDomain(raw: RawDailyRecord): DailyRecordWithIntervals {
     sleepAid: coerceSleepAid(raw.sleepAid),
     prnMedication: coercePrnMedication(raw.prnMedication),
     event: raw.event,
+    diary: raw.diary,
     intervals: raw.intervals.map((iv) => ({
       id: iv.id,
       startAt: iv.startAt,

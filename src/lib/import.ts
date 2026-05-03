@@ -92,6 +92,7 @@ export async function applyImport(records: readonly ParsedCsvRecord[]): Promise<
       sleepAid: r.sleepAid,
       prnMedication: r.prnMedication,
       event: r.event,
+      diary: r.diary,
       intervals: r.intervals.map((iv) =>
         toDbInterval(r.date, { id: '', startMin: iv.startMin, endMin: iv.endMin }),
       ),

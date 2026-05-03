@@ -31,7 +31,8 @@
 | ロードマップ・将来機能 | [13-future-roadmap.md](docs/design/13-future-roadmap.md) |
 | v1.1 機能（タグ追加 / 軸表示 / 検索 / CSVインポート） | [16-v1.1-features.md](docs/design/16-v1.1-features.md) |
 | v1.2 機能（服薬記録） | [17-v1.2-medications.md](docs/design/17-v1.2-medications.md) |
-| **v1.3 機能（イベント項目）** | [18-v1.3-event-field.md](docs/design/18-v1.3-event-field.md) |
+| v1.3 機能（イベント項目） | [18-v1.3-event-field.md](docs/design/18-v1.3-event-field.md) |
+| **v1.4 機能（日記項目）** | [19-v1.4-diary-field.md](docs/design/19-v1.4-diary-field.md) |
 
 ## 確定済みの主要技術判断
 

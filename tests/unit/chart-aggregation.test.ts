@@ -19,6 +19,7 @@ function makeRecord(
     sleepAid: null,
     prnMedication: null,
     event: null,
+    diary: null,
     intervals: intervals.map((iv, i) => ({ id: `iv-${i}`, ...iv })),
     createdAt: new Date(date),
     updatedAt: new Date(date),
