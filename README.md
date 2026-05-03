@@ -81,6 +81,10 @@ Expo Go アプリ（iOS/Android）または iOS Simulator / Android Emulator で
 
 詳細は [01-architecture.md](docs/design/01-architecture.md) を参照。
 
+## データ移行ツール
+
+過去に Excel で記録していた気分・睡眠データを CSV インポート形式に変換する一回限りのスクリプト: [convert/README.md](convert/README.md)
+
 ## ライセンス
 
 Private（自分専用、公開予定なし）。

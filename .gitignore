@@ -167,3 +167,6 @@ Thumbs.db
 # Claude Code (per-project local settings, contains permission allowlist)
 .claude/
 
+# Excel → CSV 変換ツールの個人データ・生成物（スクリプト本体は管理対象）
+convert/*.xlsx
+convert/converted.csv
