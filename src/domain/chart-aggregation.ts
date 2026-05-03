@@ -196,8 +196,7 @@ function toRawDayPoint({ iso, record }: RawByDate): ChartPoint {
 
 function shortLabel(iso: string): string {
   const d = fromIsoDate(iso);
-  const yy = String(d.getFullYear()).slice(-2);
-  return `'${yy} ${d.getMonth() + 1}/${d.getDate()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 /** 期間タブから `count` を取得。year は M6 で実装予定。 */

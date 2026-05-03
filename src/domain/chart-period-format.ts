@@ -12,7 +12,7 @@ const YEAR_MONTH_PATTERN = /^(\d{4})-(\d{2})/;
 /**
  * グラフ画面の期間ナビゲーターに表示するラベルを返す。
  *
- * - week / month: `M/D(曜) 〜 M/D(曜)`
+ * - week / month: `yyyy/M/D(曜) 〜 yyyy/M/D(曜)`
  * - year: `yyyy/M 〜 yyyy/M`（dateIso が "yyyy-MM" でも "yyyy-MM-dd" でも受理）
  */
 export function formatPeriodRange(
@@ -23,11 +23,13 @@ export function formatPeriodRange(
   if (period === 'year') {
     return `${formatYearMonth(startIso)} 〜 ${formatYearMonth(endIso)}`;
   }
-  const start = fromIsoDate(startIso);
-  const end = fromIsoDate(endIso);
-  const startLabel = `${start.getMonth() + 1}/${start.getDate()}(${DAY_LABELS[start.getDay()]})`;
-  const endLabel = `${end.getMonth() + 1}/${end.getDate()}(${DAY_LABELS[end.getDay()]})`;
-  return `${startLabel} 〜 ${endLabel}`;
+  return `${formatFullDate(startIso)} 〜 ${formatFullDate(endIso)}`;
+}
+
+/** "yyyy-MM-dd" を `yyyy/M/D(曜)` 形式で整形。 */
+function formatFullDate(iso: string): string {
+  const d = fromIsoDate(iso);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}(${DAY_LABELS[d.getDay()]})`;
 }
 
 /** "yyyy-MM" または "yyyy-MM-dd" の先頭から `yyyy/M` を組み立てる。 */
