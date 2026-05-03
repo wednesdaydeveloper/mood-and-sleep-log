@@ -14,6 +14,8 @@ export const dailyRecord = sqliteTable(
     prnMedication: text('prn_medication'),
     // v1.3 追加: イベント（任意の短文、外出先・予定など）。null = 未入力
     event: text('event'),
+    // v1.4 追加: 日記（任意の長文、5000 文字以内）。null = 未入力
+    diary: text('diary'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
   },

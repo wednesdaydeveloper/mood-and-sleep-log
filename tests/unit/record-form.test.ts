@@ -8,6 +8,7 @@ describe('recordFormSchema', () => {
     sleepAid: null,
     prnMedication: null,
     event: null,
+    diary: null,
   };
 
   it('accepts default values', () => {
@@ -108,11 +109,43 @@ describe('recordFormSchema', () => {
     });
   });
 
+  describe('diary', () => {
+    it('accepts null', () => {
+      const result = recordFormSchema.safeParse({ ...baseValues, diary: null });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts a long multi-line string', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        diary: '今日は\n良い1日だった。\n色々あった。',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts exactly 5000 chars', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        diary: 'a'.repeat(5000),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects 5001 chars', () => {
+      const result = recordFormSchema.safeParse({
+        ...baseValues,
+        diary: 'a'.repeat(5001),
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('DEFAULT_FORM_VALUES', () => {
     it('initializes optional fields as null', () => {
       expect(DEFAULT_FORM_VALUES.sleepAid).toBeNull();
       expect(DEFAULT_FORM_VALUES.prnMedication).toBeNull();
       expect(DEFAULT_FORM_VALUES.event).toBeNull();
+      expect(DEFAULT_FORM_VALUES.diary).toBeNull();
     });
   });
 });

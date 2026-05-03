@@ -69,6 +69,7 @@ export default function RecordScreen() {
             sleepAid: existing.sleepAid,
             prnMedication: existing.prnMedication,
             event: existing.event,
+            diary: existing.diary,
           });
           setIntervals(existing.intervals.map((iv) => toTimelineInterval(isoDate, iv)));
         }
@@ -106,6 +107,7 @@ export default function RecordScreen() {
         sleepAid: parsed.data.sleepAid,
         prnMedication: parsed.data.prnMedication,
         event: parsed.data.event,
+        diary: parsed.data.diary,
         intervals: intervals.map((iv) => toDbInterval(isoDate, iv)),
       });
       router.back();
@@ -257,6 +259,37 @@ export default function RecordScreen() {
             )}
           </Section>
 
+          <Section title="📓 日記（任意）">
+            <Controller
+              control={control}
+              name="diary"
+              render={({ field }) => (
+                <TextInput
+                  style={[
+                    styles.diaryInput,
+                    {
+                      backgroundColor: colors.bgSecondary,
+                      borderColor: colors.border,
+                      color: colors.textPrimary,
+                    },
+                  ]}
+                  multiline
+                  placeholder="その日あったこと、思ったことなど"
+                  placeholderTextColor={colors.textDisabled}
+                  maxLength={5000}
+                  value={field.value ?? ''}
+                  onChangeText={(text) => field.onChange(text === '' ? null : text)}
+                  textAlignVertical="top"
+                />
+              )}
+            />
+            {errors.diary && (
+              <Text style={[styles.errorText, { color: colors.danger }]}>
+                {errors.diary.message}
+              </Text>
+            )}
+          </Section>
+
           <Section title="💊 睡眠導入剤">
             <Controller
               control={control}
@@ -323,6 +356,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   eventInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+  },
+  diaryInput: {
+    minHeight: 200,
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,

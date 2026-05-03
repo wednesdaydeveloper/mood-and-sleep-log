@@ -13,7 +13,7 @@ import { formatTimelineMinute, TIMELINE_TOTAL_MINUTES } from './sleep';
 import { fromIsoDate } from '@/lib/date';
 import { logger } from '@/lib/logger';
 
-/** v1.3 以降の正規ヘッダー（8 列）。 */
+/** v1.4 以降の正規ヘッダー（9 列）。 */
 const HEADER_COLUMNS = [
   'date',
   'moodScore',
@@ -23,8 +23,21 @@ const HEADER_COLUMNS = [
   'sleepAid',
   'prnMedication',
   'event',
+  'diary',
 ] as const;
 const HEADER = HEADER_COLUMNS.join(',');
+
+/** v1.3 で出力された旧ヘッダー（8 列、diary なし）。インポート時のみ受け付ける。 */
+const LEGACY_V13_HEADER_COLUMNS = [
+  'date',
+  'moodScore',
+  'moodTags',
+  'memo',
+  'sleepIntervals',
+  'sleepAid',
+  'prnMedication',
+  'event',
+] as const;
 
 /** v1.2 で出力された旧ヘッダー（7 列、event なし）。インポート時のみ受け付ける。 */
 const LEGACY_V12_HEADER_COLUMNS = [
@@ -83,6 +96,7 @@ function rowFor(record: DailyRecordWithIntervals): string {
     quote(record.sleepAid ?? ''),
     quote(record.prnMedication ?? ''),
     quote(record.event ?? ''),
+    quote(record.diary ?? ''),
   ].join(',');
 }
 
@@ -114,6 +128,8 @@ export interface ParsedCsvRecord {
   prnMedication: PrnMedication;
   /** v1.3 追加。旧形式 CSV では null。 */
   event: string | null;
+  /** v1.4 追加。旧形式 CSV では null。 */
+  diary: string | null;
 }
 
 export interface CsvParseError {
@@ -168,17 +184,18 @@ export function parseCsv(content: string): CsvParseResult {
   return { records, errors };
 }
 
-type HeaderKind = 'current' | 'legacy_v12' | 'legacy_v11' | 'invalid';
+type HeaderKind = 'current' | 'legacy_v13' | 'legacy_v12' | 'legacy_v11' | 'invalid';
 
 const HEADER_COLUMNS_BY_KIND = {
   current: HEADER_COLUMNS,
+  legacy_v13: LEGACY_V13_HEADER_COLUMNS,
   legacy_v12: LEGACY_V12_HEADER_COLUMNS,
   legacy_v11: LEGACY_V11_HEADER_COLUMNS,
 } as const;
 
 function detectHeaderKind(row: readonly string[] | undefined): HeaderKind {
   if (!row) return 'invalid';
-  for (const kind of ['current', 'legacy_v12', 'legacy_v11'] as const) {
+  for (const kind of ['current', 'legacy_v13', 'legacy_v12', 'legacy_v11'] as const) {
     const cols = HEADER_COLUMNS_BY_KIND[kind];
     if (row.length === cols.length && cols.every((c, i) => row[i] === c)) {
       return kind;
@@ -196,7 +213,17 @@ function parseRow(
     return { error: `列数が ${expectedColumns} と一致しません（実際: ${row.length}）` };
   }
 
-  const [dateStr, moodStr, tagsStr, memoStr, intervalsStr, sleepAidStr, prnStr, eventStr] = row;
+  const [
+    dateStr,
+    moodStr,
+    tagsStr,
+    memoStr,
+    intervalsStr,
+    sleepAidStr,
+    prnStr,
+    eventStr,
+    diaryStr,
+  ] = row;
   if (!dateStr || !ISO_DATE_PATTERN.test(dateStr)) {
     return { error: `不正な日付: "${dateStr ?? ''}"` };
   }
@@ -253,6 +280,7 @@ function parseRow(
   );
 
   const event = eventStr && eventStr.length > 0 ? eventStr : null;
+  const diary = diaryStr && diaryStr.length > 0 ? diaryStr : null;
 
   return {
     record: {
@@ -264,6 +292,7 @@ function parseRow(
       sleepAid,
       prnMedication,
       event,
+      diary,
     },
   };
 }

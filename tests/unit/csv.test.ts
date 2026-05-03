@@ -8,6 +8,7 @@ type MakeRecordOpts = {
   sleepAid?: DailyRecordWithIntervals['sleepAid'];
   prnMedication?: DailyRecordWithIntervals['prnMedication'];
   event?: string | null;
+  diary?: string | null;
 };
 
 function makeRecord(
@@ -24,18 +25,24 @@ function makeRecord(
     sleepAid: opts.sleepAid ?? null,
     prnMedication: opts.prnMedication ?? null,
     event: opts.event ?? null,
+    diary: opts.diary ?? null,
     intervals: (opts.intervals ?? []).map((iv, i) => ({ id: `iv-${i}`, ...iv })),
     createdAt: new Date(date),
     updatedAt: new Date(date),
   };
 }
 
-const HEADER_V13 = 'date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event';
+const HEADER_V14 =
+  'date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event,diary';
+const HEADER_V13 =
+  'date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event';
+const HEADER_V12 = 'date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication';
+const HEADER_V11 = 'date,moodScore,moodTags,memo,sleepIntervals';
 
 describe('recordsToCsv', () => {
-  it('outputs v1.3 header (8 columns) even when records are empty', () => {
+  it('outputs v1.4 header (9 columns) even when records are empty', () => {
     const csv = recordsToCsv([]);
-    expect(csv).toContain(HEADER_V13);
+    expect(csv).toContain(HEADER_V14);
   });
 
   it('starts with UTF-8 BOM', () => {
@@ -43,7 +50,7 @@ describe('recordsToCsv', () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
   });
 
-  it('serializes a record with tags, memo, and one interval (no medication, no event)', () => {
+  it('serializes a record with tags, memo, and one interval (no medication, no event, no diary)', () => {
     const records = [
       makeRecord('2026-04-30', 1, {
         moodTags: ['楽しい', '感謝'],
@@ -56,7 +63,7 @@ describe('recordsToCsv', () => {
     const csv = recordsToCsv(records);
     const dataRow = csv.split('\n')[1];
     expect(dataRow).toBe(
-      '2026-04-30,1,"楽しい,感謝","友人と食事","23:30-07:30","","",""',
+      '2026-04-30,1,"楽しい,感謝","友人と食事","23:30-07:30","","","",""',
     );
   });
 
@@ -69,7 +76,7 @@ describe('recordsToCsv', () => {
     ];
     const csv = recordsToCsv(records);
     const dataRow = csv.split('\n')[1];
-    expect(dataRow).toBe('2026-04-30,0,"","","","lunesta-0.5","lunesta-2.0",""');
+    expect(dataRow).toBe('2026-04-30,0,"","","","lunesta-0.5","lunesta-2.0","",""');
   });
 
   it('serializes event as plain text', () => {
@@ -80,14 +87,25 @@ describe('recordsToCsv', () => {
     ];
     const csv = recordsToCsv(records);
     const dataRow = csv.split('\n')[1];
-    expect(dataRow).toBe('2026-04-30,0,"","","","","","梅田でショッピング"');
+    expect(dataRow).toBe('2026-04-30,0,"","","","","","梅田でショッピング",""');
   });
 
-  it('serializes null medication / null event as empty string', () => {
+  it('serializes diary with newlines and quotes (escapes correctly)', () => {
+    const records = [
+      makeRecord('2026-04-30', 0, {
+        diary: '今日は\n良い1日。\n"良かった"',
+      }),
+    ];
+    const csv = recordsToCsv(records);
+    // 改行を含む diary は途中で行が切れるため、文字列全体を Contain で確認
+    expect(csv).toContain('"今日は\n良い1日。\n""良かった"""');
+  });
+
+  it('serializes null event / null diary as empty string', () => {
     const records = [makeRecord('2026-04-30', 0)];
     const csv = recordsToCsv(records);
     const dataRow = csv.split('\n')[1];
-    expect(dataRow?.endsWith(',"","",""')).toBe(true);
+    expect(dataRow?.endsWith(',"","","",""')).toBe(true);
   });
 
   it('escapes embedded double-quotes by doubling them', () => {
@@ -139,13 +157,13 @@ describe('parseCsv', () => {
   });
 
   it('parses a header-only CSV without errors and no records', () => {
-    const result = parseCsv(HEADER_V13 + '\n');
+    const result = parseCsv(HEADER_V14 + '\n');
     expect(result.records).toEqual([]);
     expect(result.errors).toEqual([]);
   });
 
   it('strips UTF-8 BOM transparently', () => {
-    const csv = '﻿' + HEADER_V13 + '\n2026-04-25,0,"","","","","",""\n';
+    const csv = '﻿' + HEADER_V14 + '\n2026-04-25,0,"","","","","","",""\n';
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
     expect(result.records).toHaveLength(1);
@@ -154,8 +172,8 @@ describe('parseCsv', () => {
 
   it('parses a single record with tags, memo and intervals', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,1,"楽しい,感謝","友人と食事","23:30-07:30","","",""',
+      HEADER_V14,
+      '2026-04-30,1,"楽しい,感謝","友人と食事","23:30-07:30","","","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -170,22 +188,33 @@ describe('parseCsv', () => {
     expect(r.sleepAid).toBeNull();
     expect(r.prnMedication).toBeNull();
     expect(r.event).toBeNull();
+    expect(r.diary).toBeNull();
   });
 
   it('parses event field', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","","","","梅田でショッピング"',
+      HEADER_V14,
+      '2026-04-30,0,"","","","","","梅田でショッピング",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
     expect(result.records[0]?.event).toBe('梅田でショッピング');
   });
 
+  it('parses diary field with multi-line content and embedded quotes', () => {
+    const csv = [
+      HEADER_V14,
+      '2026-04-30,0,"","","","","","","今日は\n良い1日。\n""良かった"""',
+    ].join('\n');
+    const result = parseCsv(csv);
+    expect(result.errors).toEqual([]);
+    expect(result.records[0]?.diary).toBe('今日は\n良い1日。\n"良かった"');
+  });
+
   it('parses event with embedded quotes and commas', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","","","","梅田、なんば（""友人""）"',
+      HEADER_V14,
+      '2026-04-30,0,"","","","","","梅田、なんば（""友人""）",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -194,8 +223,8 @@ describe('parseCsv', () => {
 
   it('parses sleepAid and prnMedication stable keys', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","","lunesta-0.5","lunesta-2.0",""',
+      HEADER_V14,
+      '2026-04-30,0,"","","","lunesta-0.5","lunesta-2.0","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -205,8 +234,8 @@ describe('parseCsv', () => {
 
   it('falls back unknown medication keys to null without raising errors', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","","lunesta-99","unknown-drug",""',
+      HEADER_V14,
+      '2026-04-30,0,"","","","lunesta-99","unknown-drug","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -216,8 +245,8 @@ describe('parseCsv', () => {
 
   it('parses split sleep intervals separated by comma inside quoted field', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-29,-1,"不安,鬱","","23:00-02:00,03:30-07:00","","",""',
+      HEADER_V14,
+      '2026-04-29,-1,"不安,鬱","","23:00-02:00,03:30-07:00","","","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -226,8 +255,8 @@ describe('parseCsv', () => {
 
   it('treats double-quote escapes correctly', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","彼は""良い""と言った","","","",""',
+      HEADER_V14,
+      '2026-04-30,0,"","彼は""良い""と言った","","","","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
@@ -235,10 +264,7 @@ describe('parseCsv', () => {
   });
 
   it('reports invalid moodScore', () => {
-    const csv = [
-      HEADER_V13,
-      '2026-04-30,5,"","","","","",""',
-    ].join('\n');
+    const csv = [HEADER_V14, '2026-04-30,5,"","","","","","",""'].join('\n');
     const result = parseCsv(csv);
     expect(result.records).toEqual([]);
     expect(result.errors[0]?.line).toBe(2);
@@ -246,30 +272,21 @@ describe('parseCsv', () => {
   });
 
   it('reports invalid date format', () => {
-    const csv = [
-      HEADER_V13,
-      '2026/04/30,0,"","","","","",""',
-    ].join('\n');
+    const csv = [HEADER_V14, '2026/04/30,0,"","","","","","",""'].join('\n');
     const result = parseCsv(csv);
     expect(result.records).toEqual([]);
     expect(result.errors[0]?.message).toMatch(/日付/);
   });
 
   it('reports unknown tag', () => {
-    const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"未知のタグ","","","","",""',
-    ].join('\n');
+    const csv = [HEADER_V14, '2026-04-30,0,"未知のタグ","","","","","",""'].join('\n');
     const result = parseCsv(csv);
     expect(result.records).toEqual([]);
     expect(result.errors[0]?.message).toMatch(/未定義のタグ/);
   });
 
   it('reports invalid time range', () => {
-    const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","12:00-15:00","","",""',
-    ].join('\n');
+    const csv = [HEADER_V14, '2026-04-30,0,"","","12:00-15:00","","","",""'].join('\n');
     const result = parseCsv(csv);
     expect(result.records).toEqual([]);
     expect(result.errors[0]?.message).toMatch(/睡眠時間帯/);
@@ -277,23 +294,24 @@ describe('parseCsv', () => {
 
   it('skips blank lines', () => {
     const csv = [
-      HEADER_V13,
-      '2026-04-30,0,"","","","","",""',
+      HEADER_V14,
+      '2026-04-30,0,"","","","","","",""',
       '',
-      '2026-04-29,-1,"","","","","",""',
+      '2026-04-29,-1,"","","","","","",""',
     ].join('\n');
     const result = parseCsv(csv);
     expect(result.errors).toEqual([]);
     expect(result.records).toHaveLength(2);
   });
 
-  it('round-trips with recordsToCsv (current 8-column format with event)', () => {
+  it('round-trips with recordsToCsv (current 9-column format with diary)', () => {
     const records = [
       makeRecord('2026-04-30', 1, {
         moodTags: ['楽しい'],
         sleepAid: 'lunesta-0.5',
         prnMedication: 'lunesta-1.0',
         event: '美容院',
+        diary: '今日は良い1日だった。\n散歩もできた。',
       }),
     ];
     const csv = recordsToCsv(records);
@@ -303,12 +321,25 @@ describe('parseCsv', () => {
     expect(result.records[0]?.sleepAid).toBe('lunesta-0.5');
     expect(result.records[0]?.prnMedication).toBe('lunesta-1.0');
     expect(result.records[0]?.event).toBe('美容院');
+    expect(result.records[0]?.diary).toBe('今日は良い1日だった。\n散歩もできた。');
+  });
+
+  describe('legacy 8-column format (v1.3)', () => {
+    it('accepts header without diary and defaults diary to null', () => {
+      const csv = [
+        HEADER_V13,
+        '2026-04-30,1,"楽しい","友人と食事","23:30-07:30","lunesta-0.5","lunesta-1.0","美容院"',
+      ].join('\n');
+      const result = parseCsv(csv);
+      expect(result.errors).toEqual([]);
+      expect(result.records).toHaveLength(1);
+      expect(result.records[0]?.event).toBe('美容院');
+      expect(result.records[0]?.diary).toBeNull();
+    });
   });
 
   describe('legacy 7-column format (v1.2)', () => {
-    const HEADER_V12 = 'date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication';
-
-    it('accepts header without event and defaults event to null', () => {
+    it('accepts header without event and diary, defaults both to null', () => {
       const csv = [
         HEADER_V12,
         '2026-04-30,1,"楽しい","友人と食事","23:30-07:30","lunesta-0.5","lunesta-1.0"',
@@ -319,13 +350,14 @@ describe('parseCsv', () => {
       expect(result.records[0]?.sleepAid).toBe('lunesta-0.5');
       expect(result.records[0]?.prnMedication).toBe('lunesta-1.0');
       expect(result.records[0]?.event).toBeNull();
+      expect(result.records[0]?.diary).toBeNull();
     });
   });
 
   describe('legacy 5-column format (v1.0 / v1.1)', () => {
-    it('accepts header without sleepAid / prnMedication / event and defaults them to null', () => {
+    it('accepts header without sleepAid / prnMedication / event / diary and defaults all to null', () => {
       const csv = [
-        'date,moodScore,moodTags,memo,sleepIntervals',
+        HEADER_V11,
         '2026-04-30,1,"楽しい","友人と食事","23:30-07:30"',
       ].join('\n');
       const result = parseCsv(csv);
@@ -334,14 +366,15 @@ describe('parseCsv', () => {
       expect(result.records[0]?.sleepAid).toBeNull();
       expect(result.records[0]?.prnMedication).toBeNull();
       expect(result.records[0]?.event).toBeNull();
+      expect(result.records[0]?.diary).toBeNull();
       expect(result.records[0]?.moodTags).toEqual(['楽しい']);
     });
 
     it('rejects rows that have extra columns under the legacy header', () => {
-      // ヘッダーは 5 列なのに、データ行が 8 列だった場合は行ごとにエラー
+      // ヘッダーは 5 列なのに、データ行が 9 列だった場合は行ごとにエラー
       const csv = [
-        'date,moodScore,moodTags,memo,sleepIntervals',
-        '2026-04-30,0,"","","","lunesta-0.5","",""',
+        HEADER_V11,
+        '2026-04-30,0,"","","","lunesta-0.5","","","",""',
       ].join('\n');
       const result = parseCsv(csv);
       expect(result.records).toEqual([]);

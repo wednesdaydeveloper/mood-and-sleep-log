@@ -27,8 +27,8 @@ SLEEP_FILL_RGB = "FFFF0000"
 # 「空のシート」と、構造の異なるシートはスキップ
 SKIP_SHEETS = {"空のシート", "10"}  # 2025/10 は時間列なしのためスキップ
 
-# CSV 出力時の列順（v1.3）
-CSV_HEADER = "date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event"
+# CSV 出力時の列順（v1.4）
+CSV_HEADER = "date,moodScore,moodTags,memo,sleepIntervals,sleepAid,prnMedication,event,diary"
 
 # UTF-8 BOM
 BOM = "﻿"
@@ -228,6 +228,16 @@ def build_event(event_value: object) -> str:
     return s
 
 
+def build_diary(diary_value: object) -> str:
+    """日記列の値を 5000 文字以内で取得。空欄は空文字。"""
+    if diary_value is None:
+        return ""
+    s = str(diary_value).strip()
+    if len(s) > 5000:
+        s = s[:5000]
+    return s
+
+
 # ---------------------------------------------------------------------------
 # 列インデックス検出
 # ---------------------------------------------------------------------------
@@ -263,6 +273,7 @@ def format_row(
     sleep_aid: str,
     prn: str,
     event: str,
+    diary: str,
 ) -> str:
     return ",".join([
         date,
@@ -273,6 +284,7 @@ def format_row(
         quote(sleep_aid),
         quote(prn),
         quote(event),
+        quote(diary),
     ])
 
 
@@ -291,7 +303,9 @@ def process_sheet(ws, year: str, sheet_month: int | None) -> tuple[list[str], in
     """
     header_row = next(ws.iter_rows(values_only=True, max_row=1))
     hour_cols = find_hour_columns(header_row)
-    named = find_named_columns(header_row, ["気分", "眠剤", "頓服", "備考", "イベント"])
+    named = find_named_columns(
+        header_row, ["気分", "眠剤", "頓服", "備考", "イベント", "日記"]
+    )
 
     rows: list[str] = []
     processed = 0
@@ -322,11 +336,14 @@ def process_sheet(ws, year: str, sheet_month: int | None) -> tuple[list[str], in
         mood = parse_mood(get("気分"))
         memo = build_memo(get("備考"))
         event = build_event(get("イベント"))
+        diary = build_diary(get("日記"))
         sleep_aid = parse_sleep_aid(get("眠剤"))
         prn = parse_prn(get("頓服"))
         intervals = extract_sleep_intervals(ws, row_idx, hour_cols)
 
-        rows.append(format_row(date, mood, memo, intervals, sleep_aid, prn, event))
+        rows.append(
+            format_row(date, mood, memo, intervals, sleep_aid, prn, event, diary)
+        )
         processed += 1
 
     return rows, processed, empty_skipped, carryover_skipped

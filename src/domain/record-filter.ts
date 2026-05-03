@@ -27,7 +27,7 @@ export function filterRecords(
 }
 
 /**
- * キーワードがメモ・タグ名・イベントのいずれかに含まれていれば一致（OR）。
+ * キーワードがメモ・タグ名・イベント・日記のいずれかに含まれていれば一致（OR）。
  * 大文字小文字は区別しない。空文字列は常に true。
  */
 function matchesKeyword(record: DailyRecordWithIntervals, keyword: string): boolean {
@@ -36,6 +36,7 @@ function matchesKeyword(record: DailyRecordWithIntervals, keyword: string): bool
   const needle = trimmed.toLowerCase();
   if (record.memo && record.memo.toLowerCase().includes(needle)) return true;
   if (record.event && record.event.toLowerCase().includes(needle)) return true;
+  if (record.diary && record.diary.toLowerCase().includes(needle)) return true;
   if (record.moodTags.some((t) => t.toLowerCase().includes(needle))) return true;
   return false;
 }

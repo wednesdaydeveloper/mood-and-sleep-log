@@ -6,6 +6,7 @@ function r(
   moodTags: string[] = [],
   memo: string | null = null,
   event: string | null = null,
+  diary: string | null = null,
 ): DailyRecordWithIntervals {
   return {
     id: `id-${date}`,
@@ -16,6 +17,7 @@ function r(
     sleepAid: null,
     prnMedication: null,
     event,
+    diary,
     intervals: [],
     createdAt: new Date(date),
     updatedAt: new Date(date),
@@ -71,8 +73,18 @@ describe('matches', () => {
       expect(matches(rec, { keyword: 'coffee', selectedTags: [] })).toBe(true);
     });
 
-    it('returns false when keyword matches neither memo, tags, nor event', () => {
-      const rec = r('2026-04-30', ['不安'], 'メモ内容', '美容院');
+    it('matches diary substring', () => {
+      const rec = r('2026-04-30', [], null, null, '今日は良い1日だった');
+      expect(matches(rec, { keyword: '良い', selectedTags: [] })).toBe(true);
+    });
+
+    it('matches diary case-insensitively', () => {
+      const rec = r('2026-04-30', [], null, null, 'Felt great today');
+      expect(matches(rec, { keyword: 'GREAT', selectedTags: [] })).toBe(true);
+    });
+
+    it('returns false when keyword matches neither memo, tags, event, nor diary', () => {
+      const rec = r('2026-04-30', ['不安'], 'メモ内容', '美容院', '日記内容');
       expect(matches(rec, { keyword: 'XYZ', selectedTags: [] })).toBe(false);
     });
   });
