@@ -32,6 +32,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f7430ddd-82df-42c3-9c32-b557c032a42f"
+      }
+    },
+    "owner": "sigaokamoto"
   }
 }
