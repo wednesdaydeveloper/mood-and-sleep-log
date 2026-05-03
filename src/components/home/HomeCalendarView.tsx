@@ -47,6 +47,11 @@ export function HomeCalendarView({ records }: HomeCalendarViewProps) {
         maxDate={todayIso()}
         onDayPress={handleDayPress}
         firstDay={0}
+        renderArrow={(direction) => (
+          <Text style={[styles.arrow, { color: colors.accent }]}>
+            {direction === 'left' ? '◀' : '▶'}
+          </Text>
+        )}
         dayComponent={({ date, state }) => {
           if (!date) return <View style={styles.cell} />;
           const record = recordMap.get(date.dateString);
@@ -141,6 +146,10 @@ function formatHours(minutes: number): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  arrow: {
+    fontSize: 22,
+    paddingHorizontal: 8,
+  },
   cell: {
     width: 44,
     minHeight: 64,
